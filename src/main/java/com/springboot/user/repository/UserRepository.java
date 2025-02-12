@@ -1,6 +1,7 @@
 package com.springboot.user.repository;
 
 import com.springboot.user.entity.User;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

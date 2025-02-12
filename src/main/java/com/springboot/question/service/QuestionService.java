@@ -13,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 @Transactional
@@ -51,8 +52,11 @@ public class QuestionService {
         // findBtQuestionStatusNot -> Repository에서 생성 한 메서드
         // 제외하고 싶은 상태 제외
 
-        return questionRepository.findByQuestionStatusNot(Question.QuestionStatus.QUESTION_DELETED,
-                Question.QuestionStatus.QUESTION_DEACTIVED,
+        return questionRepository.findByQuestionStatusNotIn(
+                Arrays.asList(
+                        Question.QuestionStatus.QUESTION_DELETED,
+                        Question.QuestionStatus.QUESTION_DEACTIVED
+                ),
                 PageRequest.of(page - 1, size, Sort.by("questionId").descending()));
     }
 
