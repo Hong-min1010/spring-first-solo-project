@@ -12,9 +12,8 @@ import javax.validation.constraints.Positive;
 @NoArgsConstructor
 public class AnswerResponseDto {
     // 어느 질문에 대한 Response인지 확인하기 위해 사용
-    @Positive
     private Long answerId;
-
-    @NotBlank
+    private Long userId;
+    private String userName;
     private String answerContext;
 }
