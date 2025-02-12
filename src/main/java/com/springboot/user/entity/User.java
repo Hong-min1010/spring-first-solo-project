@@ -1,5 +1,6 @@
 package com.springboot.user.entity;
 
+import com.springboot.answer.entity.Answer;
 import com.springboot.audit.BaseEntity;
 import com.springboot.like.entity.Like;
 import com.springboot.question.entity.Question;

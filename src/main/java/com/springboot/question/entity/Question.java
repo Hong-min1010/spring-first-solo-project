@@ -28,7 +28,7 @@ public class Question extends BaseEntity {
     @Column(nullable = false)
     private int viewCount;
 
-    @OneToOne(mappedBy = "question", cascade = CascadeType.REMOVE)
+    @OneToOne(mappedBy = "question", cascade = CascadeType.PERSIST)
     private Answer answer;
 
     @JoinColumn(name = "USER_ID")
@@ -40,11 +40,18 @@ public class Question extends BaseEntity {
 
     public enum QuestionStatus {
         // 질문 등록
-        QUESTION_REGISTERED,
-        QUESTION_ANSWERED,
-        QUESTION_DELETED,
+        QUESTION_REGISTERED("질문 등록 상태"),
+        QUESTION_ANSWERED("답변 완료 상태"),
+        QUESTION_DELETED("질문 삭제 상태"),
         // 회원이 탈퇴, 비활성화 時 질문 비활성화
-        QUESTION_DEACTIVED
+        QUESTION_DEACTIVED("질문 비활성화 상태");
+
+        @Getter
+        private String status;
+
+        QuestionStatus(String status) {
+            this.status = status;
+        }
     }
 
     @Enumerated(EnumType.STRING)
@@ -56,7 +63,7 @@ public class Question extends BaseEntity {
     }
 
     @Column(nullable = false)
-    private int likeCount;
+    private int likeCount = 0;
 
     public void setUser(User user) {
         this.user = user;
