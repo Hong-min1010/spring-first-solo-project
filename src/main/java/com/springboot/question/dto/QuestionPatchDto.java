@@ -2,17 +2,25 @@ package com.springboot.question.dto;
 
 import com.springboot.question.entity.Question;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.validation.constraints.Positive;
+@Setter
 @Getter
+@NoArgsConstructor
 public class QuestionPatchDto {
 
+    @Positive
     private Long questionId;
 
     private String questionContext;
 
-    private int viewCount;
-
+    @Enumerated(EnumType.STRING)
     private Question.QuestionStatus questionStatus;
 
+    @Enumerated(EnumType.STRING)
     private Question.QuestionVisibility questionVisibility;
 }
