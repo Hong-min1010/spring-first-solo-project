@@ -1,5 +1,6 @@
 package com.springboot.user.entity;
 
+import com.springboot.audit.BaseEntity;
 import com.springboot.like.entity.Like;
 import com.springboot.question.entity.Question;
 import lombok.Getter;
@@ -17,7 +18,7 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class User {
+public class User extends BaseEntity {
 
     @Id
     private Long userId;
@@ -29,9 +30,6 @@ public class User {
 
     @OneToMany(mappedBy = "user")
     private List<Question> questions = new ArrayList<>();
-
-    @OneToMany(mappedBy = "user")
-    private List<Like> likes = new ArrayList<>();
 
     private UserStatus userStatus = UserStatus.USER_ACTIVE;
 

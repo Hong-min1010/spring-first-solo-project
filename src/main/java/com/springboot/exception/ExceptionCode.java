@@ -1,4 +1,4 @@
-package com.springboot.exeption;
+package com.springboot.exception;
 
 import lombok.Getter;
 

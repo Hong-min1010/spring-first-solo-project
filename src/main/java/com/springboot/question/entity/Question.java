@@ -1,7 +1,9 @@
 package com.springboot.question.entity;
 
 import com.springboot.answer.entity.Answer;
+import com.springboot.audit.BaseEntity;
 import com.springboot.like.entity.Like;
+import com.springboot.user.entity.User;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -14,16 +16,13 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
-public class Question {
+public class Question extends BaseEntity {
 
     @Id
     private Long questionId;
 
     @Column(nullable = false)
     private String questionContext;
-
-    @Column(nullable = false)
-    private String writer;
 
     @Column(nullable = false)
     private int view;
@@ -33,6 +32,10 @@ public class Question {
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.REMOVE)
     private List<Like> likes = new ArrayList<>();
+
+    @JoinColumn(name = "USER_ID")
+    @ManyToOne
+    private User user;
 
     @Enumerated(EnumType.STRING)
     private QuestionStatus questionStatus = QuestionStatus.QUESTION_REGISTERED;
