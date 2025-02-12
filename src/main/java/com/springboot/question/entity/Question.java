@@ -80,4 +80,12 @@ public class Question extends BaseEntity {
             answer.setQuestion(this);
         }
     }
+    public void addLikeCount() {
+        // addLikeCount가 호출 될때마다 +1씩 증가
+        this.likeCount++;
+    }
+    public void decreaseLikeCount() {
+        // decreaseLikeCount가 호출 될때마다 LikeCount 1씩 감소 (최소값 = 0)
+        this.likeCount = Math.max(0, this.likeCount - 1);
+    }
 }

@@ -1,5 +1,7 @@
 package com.springboot.like.service;
 
+import com.springboot.exception.BusinessLogicException;
+import com.springboot.exception.ExceptionCode;
 import com.springboot.like.entity.Like;
 import com.springboot.like.repository.LikeRepository;
 import com.springboot.question.entity.Question;
@@ -25,15 +27,49 @@ public class LikeService {
     }
 
     public Like addLike(Long userId, Long questionId) {
-        // 해당 user가 있는지 확인하는 로직
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+        User user = findVerifiedUser(userId);
+        Question question = findVerifiedQuestion(questionId);
 
-        // 해당 question이 있는지 확인하는 로직
-        Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new RuntimeException("질문을 찾을 수 없습니다."));
+        Like like = new Like();
+        like.setUser(user);
+        like.setQuestion(question);
+        likeRepository.save(like);
 
+        question.addLikeCount();
+        // likeCount는 Question에 있기 때문에 좋아요 갯수 정보는 questionRepository에 저장
+        questionRepository.save(question);
 
-        return null;
+        return like;
+    }
+
+    public void removeLike(Long userId, Long questionId) {
+        User user = findVerifiedUser(userId);
+        Question question = findVerifiedQuestion(questionId);
+
+        Like like = likeRepository.findByUserAndQuestion(user, question)
+                .orElseThrow(() -> new BusinessLogicException(ExceptionCode.LIKE_NOT_FOUND));
+
+        likeRepository.delete(like);
+
+        question.decreaseLikeCount();
+        questionRepository.save(question);
+    }
+
+    // 해당 사용자가 존재하는지 확인하는 메서드
+    public User findVerifiedUser(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessLogicException(ExceptionCode.USER_NOT_FOUND));
+    }
+    // 질문이 존재하는지 확인하는 메서드
+    public Question findVerifiedQuestion(Long questionId) {
+        return questionRepository.findById(questionId)
+                .orElseThrow(() -> new BusinessLogicException(ExceptionCode.QUESTION_NOT_FOUND));
+    }
+    // 좋아요를 이미 눌렀는지 검증하는 메서드
+    public void verifyLikeNotExists(User user, Question question) {
+        Optional<Like> like = likeRepository.findByUserAndQuestion(user, question);
+        if (like.isPresent()) {
+            throw new BusinessLogicException(ExceptionCode.LIKE_ALREADY_EXISTS);
+        }
     }
 }

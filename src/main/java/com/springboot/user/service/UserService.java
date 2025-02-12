@@ -54,8 +54,6 @@ public class UserService {
     public void deleteUser(Long userId) {
         User user = findVerifiedUser(userId);
 
-        user.setUserStatus(User.UserStatus.USER_QUIT);
-
         userRepository.save(user);
     }
 
