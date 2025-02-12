@@ -18,7 +18,7 @@ public class QuestionPostDto {
 
     private String questionContext;
 
-    private int view;
+    private int viewCount;
 
     private List<Like> likes;
 

@@ -8,11 +8,11 @@ public class QuestionPatchDto {
 
     private Long questionId;
 
+    private String questionContext;
+
+    private int viewCount;
+
     private Question.QuestionStatus questionStatus;
 
     private Question.QuestionVisibility questionVisibility;
-
-    private int view;
-
-    private String questionContext;
 }

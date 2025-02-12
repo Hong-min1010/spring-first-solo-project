@@ -19,19 +19,17 @@ import java.util.List;
 public class Question extends BaseEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long questionId;
 
     @Column(nullable = false)
     private String questionContext;
 
     @Column(nullable = false)
-    private int view;
+    private int viewCount;
 
     @OneToOne(mappedBy = "question", cascade = CascadeType.REMOVE)
     private Answer answer;
-
-    @OneToMany(mappedBy = "question", cascade = CascadeType.REMOVE)
-    private List<Like> likes = new ArrayList<>();
 
     @JoinColumn(name = "USER_ID")
     @ManyToOne
@@ -50,11 +48,29 @@ public class Question extends BaseEntity {
     }
 
     @Enumerated(EnumType.STRING)
-    private QuestionVisibility questionVisibility = QuestionVisibility.PUBLIC;
+    private QuestionVisibility questionVisibility = QuestionVisibility.QUESTION_PUBLIC;
 
     public enum QuestionVisibility {
-        PUBLIC,
-        SECRET
+        QUESTION_PUBLIC,
+        QUESTION_SECRET
     }
 
+    @Column(nullable = false)
+    private int likeCount;
+
+    public void setUser(User user) {
+        this.user = user;
+
+        if (!user.getQuestions().contains(this)) {
+            user.getQuestions().add(this);
+        }
+    }
+
+    public void setAnswer(Answer answer) {
+        this.answer = answer;
+
+        if (answer.getQuestion() != this) {
+            answer.setQuestion(this);
+        }
+    }
 }

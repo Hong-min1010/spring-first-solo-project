@@ -13,6 +13,7 @@ import javax.persistence.*;
 @Getter
 @Setter
 @NoArgsConstructor
+@Table(name = "LIKES")
 public class Like extends BaseEntity {
 
     @Id
@@ -23,7 +24,15 @@ public class Like extends BaseEntity {
     @ManyToOne
     private Question question;
 
-    @JoinColumn
+    @JoinColumn(name = "USER_ID")
     @ManyToOne
     private User user;
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public void setQuestion(Question question) {
+        this.question = question;
+    }
 }

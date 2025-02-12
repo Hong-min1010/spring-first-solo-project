@@ -24,4 +24,12 @@ public class Answer extends BaseEntity {
     @OneToOne
     @JoinColumn(name = "QUESTION_ID")
     private Question question;
+
+    public void setQuestion(Question question) {
+        this.question = question;
+
+        if (question.getAnswer() != this) {
+            question.setAnswer(this);
+        }
+    }
 }

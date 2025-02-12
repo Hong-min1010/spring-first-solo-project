@@ -2,6 +2,7 @@ package com.springboot.question.dto;
 
 import com.springboot.answer.entity.Answer;
 import com.springboot.like.entity.Like;
+import com.springboot.question.entity.Question;
 import lombok.Getter;
 
 import java.util.List;
@@ -12,9 +13,13 @@ public class QuestionResponseDto {
 
     private String questionContext;
 
-    private int view;
+    private int viewCount;
 
-    private Answer answer;
+    private Question.QuestionStatus questionStatus;
 
-    private List<Like> likes;
+    private Question.QuestionVisibility questionVisibility;
+
+//    private Answer answer;
+//
+//    private List<Like> likes;
 }
