@@ -10,6 +10,8 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,15 +50,23 @@ public class UserService {
         return savedUser;
     }
 
-    public User updateUser(User user) {
-        User findUser = findVerifiedUser(user.getUserId());
+    public User updateUser(Long userId, User user) {
+
+        User findUser = findVerifiedUser(userId);
+
+//        String currentUserEmail = getCurrentUserEmail();
+
+        // 현재 로그인 한 사용자의 Email과 수정하려는 사용자의 Email이 같은지 확인
+//        if (!findUser.getEmail().equals(currentUserEmail)) {
+//            throw new BusinessLogicException(ExceptionCode.USER_FORBIDDEN);
+//        }
 
         Optional.ofNullable(user.getEmail())
-                .ifPresent(email -> user.setEmail(email));
+                .ifPresent(email -> findUser.setEmail(email));
         Optional.ofNullable(user.getName())
                 .ifPresent(name -> findUser.setName(name));
         Optional.ofNullable(user.getUserStatus())
-                .ifPresent(userStatus -> user.setUserStatus(userStatus));
+                .ifPresent(userStatus -> findUser.setUserStatus(userStatus));
 
         return userRepository.save(findUser);
     }
@@ -94,4 +104,16 @@ public class UserService {
                         new BusinessLogicException(ExceptionCode.USER_NOT_FOUND));
         return findUser;
     }
+
+    // 현재 로그인 한 User의 Email 확인
+//    public String getCurrentUserEmail() {
+//        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+//
+//        if (principal instanceof UserDetails) {
+//            return ((UserDetails) principal).getUsername();
+//        } else {
+//            return principal.toString();
+//        }
+//    }
+
 }

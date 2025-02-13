@@ -1,4 +1,4 @@
-package com.springboot.auth.userdetails;
+package com.springboot.auth.customuserdetails;
 
 import com.springboot.auth.utils.AuthorityUtils;
 import com.springboot.exception.BusinessLogicException;
@@ -16,12 +16,12 @@ import java.util.Optional;
 
 @Component
 // 사용자의 인증 정보를 DB에서 조회하는 Class
-public class MemberDetailsService implements UserDetailsService {
+public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
     private final AuthorityUtils authorityUtils; // 사용자 권한을 생성하는 유틸 Class
 
     // DI 생성자 주입
-    public MemberDetailsService(UserRepository userRepository, AuthorityUtils authorityUtils) {
+    public CustomUserDetailsService(UserRepository userRepository, AuthorityUtils authorityUtils) {
         this.userRepository = userRepository;
         this.authorityUtils = authorityUtils;
     }

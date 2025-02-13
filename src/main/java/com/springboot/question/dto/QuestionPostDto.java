@@ -24,10 +24,10 @@ public class QuestionPostDto {
     private Long userId;
 
     @NotNull
-    private String questionContext;
+    private String title;
 
     @NotNull
-    private String title;
+    private String questionContext;
 
     @Enumerated(EnumType.STRING)
     private Question.QuestionStatus questionStatus;

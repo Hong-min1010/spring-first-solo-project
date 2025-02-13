@@ -10,8 +10,8 @@ public enum ExceptionCode {
     QUESTION_FORBIDDEN(404, "Forbidden Question"),
     LIKE_ALREADY_EXISTS(409, "Like already exists"),
     LIKE_NOT_FOUND(404, "Like not found"),
-    USER_NOT_CREATED(400, "User not created");
-
+    USER_NOT_CREATED(400, "User not created"),
+    USER_FORBIDDEN(404, "Forbidden User");
 
     @Getter
     private int status;

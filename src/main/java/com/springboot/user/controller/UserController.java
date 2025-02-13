@@ -13,6 +13,8 @@ import com.springboot.utils.UriCreator;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -50,16 +52,24 @@ public class UserController {
 
     @PatchMapping("/{user-id}")
     public ResponseEntity patchUser(@PathVariable("user-id") Long userId,
-                                    @Valid @RequestBody UserPatchDto requestBody) {
+                                    @Valid @RequestBody UserPatchDto requestBody,
+                                    @AuthenticationPrincipal UserDetails userDetails) {
 
-        requestBody.setUserId(userId);
+        String currentUserEmail = userDetails.getUsername();
 
-        User user =
-                userService.updateUser(userMapper.userPatchDtoToUser(requestBody));
+        User findUser = userService.findVerifiedUser(userId);
+
+        if (!findUser.getEmail().equals(currentUserEmail)) {
+            throw new BusinessLogicException(ExceptionCode.USER_FORBIDDEN);
+        }
+
+
+        User updatedUser =
+                userService.updateUser(userId, userMapper.userPatchDtoToUser(requestBody));
 
         return new ResponseEntity(
                 // singleResponseDto -> JSON 응답을 일관된 형식으로 유지할 수 있음
-                new SingleResponseDto<>(userMapper.userToUserResponseDto(user)), HttpStatus.OK
+                new SingleResponseDto<>(userMapper.userToUserResponseDto(updatedUser)), HttpStatus.OK
         );
     }
 

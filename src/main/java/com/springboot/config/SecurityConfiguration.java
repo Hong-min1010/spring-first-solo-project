@@ -68,44 +68,57 @@ public class SecurityConfiguration {
                 .and()
                 // 요청별 권한 설정
                 .authorizeHttpRequests(authorize ->authorize
+                        // USER
+
                         // 로그인(토큰 발급) 요청은 모두 허용
                         .antMatchers(HttpMethod.POST, "/v11/auth/login").permitAll() // 로그인 요청 허용
                         // 회원가입 요청 모두 허용
-                        .antMatchers(HttpMethod.POST, "/*/members").permitAll()
+                        .antMatchers(HttpMethod.POST, "/*/users").permitAll()
                         // 회원 정보 수정 (USER만 가능)
-                        .antMatchers(HttpMethod.PATCH, "/*/members/**").hasRole("USER")
-                        // 회원 목록 조회 (ADMIN만 가능)
-                        .antMatchers(HttpMethod.GET, "/*/members").hasRole("ADMIN")
-                        // 특정 회원 조회 (USER, ADMIN 가능)
-                        // 이 설정은 모든 회원의 정보를 열람할 수 있도록 허용한 것이 아니라, 해당 엔드포인트를 호출할 권한만 부여한 것임.
-                        .antMatchers(HttpMethod.GET, "/*/members/**").hasAnyRole("USER", "ADMIN")
+                        .antMatchers(HttpMethod.PATCH, "/*/users/**").hasRole("USER")
+                        // 회원 전체 조회 (ADMIN만 가능)
+                        .antMatchers(HttpMethod.GET, "/*/users").hasRole("ADMIN")
+                        // 특정 회원 조회 (ADMIN만 가능)
+                        .antMatchers(HttpMethod.GET, "/*/users/**").hasRole("ADMIN")
                         // 회원 삭제 (USER만 가능)
-                        .antMatchers(HttpMethod.DELETE, "/*/members/**").hasRole("USER")
+                        .antMatchers(HttpMethod.DELETE, "/*/users/**").hasRole("USER")
 
-                        // 주문 관련 권한 설정
-                        // 주문 생성 (모든 사용자 접근 허용 (비회원도 가능 !))
-                        .antMatchers(HttpMethod.POST, "/*/orders").hasRole("USER")
-                        // 주문 수정 (USER, ADMIN 둘 다허용)
-                        .antMatchers(HttpMethod.PATCH, "/*/orders/**").hasAnyRole("USER", "ADMIN")
-                        // 주문 목록 조회 (ADMIN만 가능)
-                        .antMatchers(HttpMethod.GET, "/*/orders").hasRole("ADMIN")
+                        // QUESTION
+
+                        // Question 생성 (회원만 가능)
+                        .antMatchers(HttpMethod.POST, "/*/questions").hasRole("USER")
+                        // Question 수정 (USER만 허용)
+                        .antMatchers(HttpMethod.PATCH, "/*/questions/**").hasRole("USER")
+                        // Question 전체 조회 (USER, ADMIN 가능)
+                        .antMatchers(HttpMethod.GET, "/*/questions").hasAnyRole("USER", "ADMIN")
                         // 특정 주문 조회 (USER, ADMIN 둘 다 가능)
-                        .antMatchers(HttpMethod.GET, "/*/orders/**").hasAnyRole("USER", "ADMIN")
-                        // 주문 취소 (USER만 가능)
-                        .antMatchers(HttpMethod.DELETE, "/*/orders/**").hasRole("USER")
+                        .antMatchers(HttpMethod.GET, "/*/questions/**").hasAnyRole("USER", "ADMIN")
+                        // Question 삭제 (USER만 가능)
+                        .antMatchers(HttpMethod.DELETE, "/*/questions/**").hasRole("USER")
 
-                        // 커피 관련 권한 설정
-                        // 커피 생성 (ADMIN만 가능)
-                        .antMatchers(HttpMethod.POST, "/*/coffees").hasRole("ADMIN")
-                        // 커피 정보 수정 (ADMIN만 가능)
-                        .antMatchers(HttpMethod.PATCH, "/*/coffees/**").hasRole("ADMIN")
-                        // Coffee 전체 조회 (모두 허용 (비회원도 조회 가능))
-                        .antMatchers(HttpMethod.GET, "/*/coffees").permitAll()
-                        // 특정 Coffee 조회 (모두 허용 (비회원도 특정 커피 조회 가능))
-                        .antMatchers(HttpMethod.GET, "/*/coffees/**").permitAll()
-                        // 특정 Coffee 삭제 (ADMIN만 가능)
-                        .antMatchers(HttpMethod.DELETE, "/*/coffees/**").hasRole("ADMIN")
+                        // Answer 권한 설정
+
+                        // Answer 생성 (ADMIN만 가능)
+                        .antMatchers(HttpMethod.POST, "/*/answers").hasRole("ADMIN")
+                        // Answer 수정 (ADMIN만 가능)
+                        .antMatchers(HttpMethod.PATCH, "/*/answers/**").hasRole("ADMIN")
+                        // Answer 전체 조회 (USER, ADMIN 가능)
+                        .antMatchers(HttpMethod.GET, "/*/answers").hasAnyRole("USER", "ADMIN")
+                        // 특정 Answer 조회 (USER, ADMIN 가능)
+                        .antMatchers(HttpMethod.GET, "/*/answers/**").hasAnyRole("USER", "ADMIN")
+                        // 특정 Answer 삭제 (ADMIN만 가능)
+                        .antMatchers(HttpMethod.DELETE, "/*/answers/**").hasRole("ADMIN")
+
+                        // Like
+
+                        // Like 생성 (USER, ADMIN 가능)
+                        .antMatchers(HttpMethod.POST, "/*/likes").hasAnyRole("USER", "ADMIN")
+
+                        // 특정 like 삭제 (USER, ADMIN 가능)
+                        .antMatchers(HttpMethod.DELETE, "/*/likes").hasAnyRole("USER", "ADMIN")
+
                         .anyRequest().permitAll()
+
                 );
         return http.build();
     }

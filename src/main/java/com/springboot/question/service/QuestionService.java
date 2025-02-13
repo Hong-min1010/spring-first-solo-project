@@ -32,6 +32,7 @@ public class QuestionService {
     }
 
     public Question createQuestion(Question question) {
+
         userService.verifyExistsEmail(question.getUser().getEmail());
 
         return questionRepository.save(question);
@@ -70,8 +71,8 @@ public class QuestionService {
         questionRepository.save(question);
     }
 
-    public Question updateQuestion(long questionId, Long userId) {
-        Question question = findVerifiedQuestion(questionId);
+    public Question updateQuestion(Long questionId, Long userId, Question question) {
+        Question findQuestion = findVerifiedQuestion(questionId);
 
         if (question.getQuestionStatus() == Question.QuestionStatus.QUESTION_ANSWERED ||
                 !question.getUser().getUserId().equals(userId)) {
@@ -103,5 +104,7 @@ public class QuestionService {
 
         return findQuestion;
     }
+
+    // Question = User 만 가능 !
 
 }
