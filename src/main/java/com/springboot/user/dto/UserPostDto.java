@@ -14,7 +14,6 @@ import javax.validation.constraints.NotBlank;
 @Getter
 public class UserPostDto {
 
-    @Email
     @NotBlank
     private String email;
 

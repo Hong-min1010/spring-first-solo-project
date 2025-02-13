@@ -16,6 +16,8 @@ public class QuestionPatchDto {
     @Positive
     private Long questionId;
 
+    private String title;
+
     private String questionContext;
 
     @Enumerated(EnumType.STRING)

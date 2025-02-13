@@ -16,6 +16,7 @@ import java.util.List;
 @Getter
 public class QuestionResponseDto {
     private Long questionId;
+    private String title;
     private String questionContext;
     private int viewCount;
     private int likeCount;

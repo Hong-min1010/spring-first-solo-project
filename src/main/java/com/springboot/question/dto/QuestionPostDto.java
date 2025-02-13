@@ -26,6 +26,9 @@ public class QuestionPostDto {
     @NotNull
     private String questionContext;
 
+    @NotNull
+    private String title;
+
     @Enumerated(EnumType.STRING)
     private Question.QuestionStatus questionStatus;
 

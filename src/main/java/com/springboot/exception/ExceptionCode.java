@@ -9,7 +9,8 @@ public enum ExceptionCode {
     ANSWER_NOT_FOUND(404, "Answer not found"),
     QUESTION_FORBIDDEN(404, "Forbidden Question"),
     LIKE_ALREADY_EXISTS(409, "Like already exists"),
-    LIKE_NOT_FOUND(404, "Like not found");
+    LIKE_NOT_FOUND(404, "Like not found"),
+    USER_NOT_CREATED(400, "User not created");
 
 
     @Getter

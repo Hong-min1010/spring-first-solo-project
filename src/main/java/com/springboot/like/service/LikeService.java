@@ -30,7 +30,10 @@ public class LikeService {
         User user = findVerifiedUser(userId);
         Question question = findVerifiedQuestion(questionId);
 
+        verifyLikeNotExists(user, question);
+
         Like like = new Like();
+
         like.setUser(user);
         like.setQuestion(question);
         likeRepository.save(like);
@@ -60,14 +63,17 @@ public class LikeService {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessLogicException(ExceptionCode.USER_NOT_FOUND));
     }
+
     // 질문이 존재하는지 확인하는 메서드
     public Question findVerifiedQuestion(Long questionId) {
         return questionRepository.findById(questionId)
                 .orElseThrow(() -> new BusinessLogicException(ExceptionCode.QUESTION_NOT_FOUND));
     }
+
     // 좋아요를 이미 눌렀는지 검증하는 메서드
     public void verifyLikeNotExists(User user, Question question) {
         Optional<Like> like = likeRepository.findByUserAndQuestion(user, question);
+
         if (like.isPresent()) {
             throw new BusinessLogicException(ExceptionCode.LIKE_ALREADY_EXISTS);
         }

@@ -16,6 +16,8 @@ import java.util.List;
 @Getter
 @Setter
 @NoArgsConstructor
+// user가 DB에서 사용하는 예약어이기때문에 따로 설정
+@Table(name = "users")
 public class User extends BaseEntity {
 
     @Id

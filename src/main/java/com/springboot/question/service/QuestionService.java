@@ -45,6 +45,7 @@ public class QuestionService {
             !question.getUser().getUserId().equals(userId)) {
             throw new BusinessLogicException(ExceptionCode.QUESTION_FORBIDDEN);
         }
+
         return question;
     }
 
@@ -61,6 +62,7 @@ public class QuestionService {
     }
 
     public void deleteQuestion(long questionId) {
+        // 질문을 등록 한 사용자만 삭제 가능
         Question question = findVerifiedQuestion(questionId);
 
         question.setQuestionStatus(Question.QuestionStatus.QUESTION_DELETED);

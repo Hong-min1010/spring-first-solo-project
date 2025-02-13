@@ -23,6 +23,9 @@ public class Question extends BaseEntity {
     private Long questionId;
 
     @Column(nullable = false)
+    private String title;
+
+    @Column(nullable = false)
     private String questionContext;
 
     @Column(nullable = false)
