@@ -29,6 +29,13 @@ public class User extends BaseEntity {
 
     private String name;
 
+    @Column(nullable = false)
+    private String password;
+
+    // User마다 권한 부여 -> 자동 테이블 생성(h2)
+    @ElementCollection(fetch = FetchType.EAGER)
+    private List<String> roles = new ArrayList<>();
+
     @OneToMany(mappedBy = "user")
     private List<Question> questions = new ArrayList<>();
 

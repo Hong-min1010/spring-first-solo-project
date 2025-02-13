@@ -19,4 +19,7 @@ public class UserPostDto {
 
     @NotBlank
     private String name;
+
+    @NotBlank
+    private String password;
 }
