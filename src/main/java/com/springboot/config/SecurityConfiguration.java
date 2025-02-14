@@ -84,7 +84,7 @@ public class SecurityConfiguration {
                         // 회원 전체 조회 (ADMIN만 가능)
                         .antMatchers(HttpMethod.GET, "/*/users").hasRole("ADMIN")
                         // 특정 회원 조회 (ADMIN만 가능)
-                        .antMatchers(HttpMethod.GET, "/*/users/**").hasRole("ADMIN")
+                        .antMatchers(HttpMethod.GET, "/*/users/**").hasAnyRole("ADMIN", "USER")
                         // 회원 삭제 (USER만 가능)
                         .antMatchers(HttpMethod.DELETE, "/*/users/**").hasRole("USER")
 

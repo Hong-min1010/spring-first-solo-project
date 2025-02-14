@@ -23,5 +23,7 @@ public class QuestionResponseDto {
     private Question.QuestionStatus questionStatus;
     private Question.QuestionVisibility questionVisibility;
     private String userName;
-    private AnswerResponseDto answerResponseDto;
+    // 답변 목록 추가
+    private List<AnswerResponseDto> answers;
+
 }

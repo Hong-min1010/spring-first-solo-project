@@ -8,9 +8,11 @@ import com.springboot.exception.BusinessLogicException;
 import com.springboot.exception.ExceptionCode;
 import com.springboot.user.dto.UserPatchDto;
 import com.springboot.user.dto.UserPostDto;
+import com.springboot.user.dto.UserResponseDto;
 import com.springboot.user.entity.User;
 import com.springboot.user.mapper.UserMapper;
 import com.springboot.user.service.UserService;
+import com.springboot.utils.CheckUserRoles;
 import com.springboot.utils.UriCreator;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -31,10 +33,13 @@ import java.util.Optional;
 public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
+    private final CheckUserRoles checkUserRoles;
 
-    public UserController(UserService userService, UserMapper userMapper) {
+    public UserController(UserService userService, UserMapper userMapper,
+                          CheckUserRoles checkUserRoles) {
         this.userService = userService;
         this.userMapper = userMapper;
+        this.checkUserRoles = checkUserRoles;
     }
 
     @PostMapping
@@ -56,18 +61,7 @@ public class UserController {
                                     @Valid @RequestBody UserPatchDto requestBody,
                                     @AuthenticationPrincipal CustomUserDetails customUserDetails) {
 
-        User findUser = userService.findUser(userId);
-
-        Long foundUserId = findUser.getUserId();
-
-        Long currentUserId = customUserDetails.getUserId();
-
-//        User findUser = userService.findVerifiedUser(userId);
-
-        if (foundUserId != currentUserId) {
-            throw new BusinessLogicException(ExceptionCode.USER_FORBIDDEN);
-        }
-
+        userService.matchUserId(userId, customUserDetails);
 
         User updatedUser =
                 userService.updateUser(userId, userMapper.userPatchDtoToUser(requestBody));
@@ -82,20 +76,30 @@ public class UserController {
     public ResponseEntity getUser(@PathVariable("user-id") Long userId,
                                   @AuthenticationPrincipal CustomUserDetails customUserDetails) {
 
-        User findUser = userService.findUser(userId);
-
-        Long findUserId = findUser.getUserId();
-
+        // 현재 로그인 한(인증 된) 사용자의 ID 가져오기
         Long currentUserId = customUserDetails.getUserId();
 
-        if(findUserId != currentUserId) {
+        System.out.println("Current User Id: " + currentUserId);
+//        // 현재 로그인 한 사용자의 ID와 조회 하려는 User의 ID가 같은지 확인
+        // 수정 -> 전체 주석 처리 : 이 로직을 작성하게 되면 ADMIN의 ID와 USER의 ID가 맞지 않으면
+        // Exception이 발생하기 때문에 주석처리 함
+//        userService.matchUserId(userId, customUserDetails);
+
+        if (!checkUserRoles.isAdmin() && !currentUserId.equals(userId)) {
             throw new BusinessLogicException(ExceptionCode.USER_FORBIDDEN);
         }
 
-        return new ResponseEntity(
-                new SingleResponseDto<>(userService.findUser(userId)),
-                HttpStatus.OK
+        User user = userService.findUser(userId);
+
+        UserResponseDto responseDto = new UserResponseDto(
+                user.getUserId(),
+                user.getEmail(),
+                user.getName(),
+                user.getUserStatus(),
+                user.getRoles()
         );
+
+        return new ResponseEntity(new SingleResponseDto<>(responseDto), HttpStatus.OK);
     }
 
     @GetMapping
@@ -109,7 +113,11 @@ public class UserController {
     }
 
     @DeleteMapping("/{user-id}")
-    public ResponseEntity deleteUser(@PathVariable ("user-id") @Positive Long userId) {
+    public ResponseEntity deleteUser(@PathVariable ("user-id") @Positive Long userId,
+                                     @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+
+        userService.matchUserId(userId, customUserDetails);
+
         userService.deleteUser(userId);
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);

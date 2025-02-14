@@ -1,6 +1,7 @@
 package com.springboot.user.service;
 
 import com.springboot.auth.utils.AuthorityUtils;
+import com.springboot.auth.utils.CustomUserDetails;
 import com.springboot.exception.BusinessLogicException;
 import com.springboot.exception.ExceptionCode;
 import com.springboot.helper.event.UserRegistrationApplicationEvent;
@@ -10,6 +11,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -52,7 +54,8 @@ public class UserService {
 
     public User updateUser(Long userId, User user) {
 
-        User findUser = findVerifiedUser(userId);
+         User existingUser = findVerifiedUser(userId);
+
 
 //        String currentUserEmail = getCurrentUserEmail();
 
@@ -62,13 +65,11 @@ public class UserService {
 //        }
 
         Optional.ofNullable(user.getEmail())
-                .ifPresent(email -> findUser.setEmail(email));
+                .ifPresent(email -> existingUser.setEmail(email));
         Optional.ofNullable(user.getName())
-                .ifPresent(name -> findUser.setName(name));
-        Optional.ofNullable(user.getUserStatus())
-                .ifPresent(userStatus -> findUser.setUserStatus(userStatus));
+                .ifPresent(name -> existingUser.setName(name));
 
-        return userRepository.save(findUser);
+        return userRepository.save(existingUser);
     }
 
     public User findUser(Long userId) {
@@ -83,7 +84,12 @@ public class UserService {
     }
 
     public void deleteUser(Long userId) {
+
         User user = findVerifiedUser(userId);
+
+        user.quitUser();
+
+        userRepository.deleteById(userId);
 
         userRepository.save(user);
     }
@@ -103,6 +109,20 @@ public class UserService {
                 optionalUser.orElseThrow(() ->
                         new BusinessLogicException(ExceptionCode.USER_NOT_FOUND));
         return findUser;
+    }
+
+    public void matchUserId(Long userId,CustomUserDetails customUserDetails) {
+
+        User findUser = findVerifiedUser(userId);
+
+        Long foundUserId = findUser.getUserId();
+
+        Long currentUserId = customUserDetails.getUserId();
+
+        if (!foundUserId.equals(currentUserId)) {
+            throw new BusinessLogicException(ExceptionCode.USER_FORBIDDEN);
+        }
+
     }
 
     // 현재 로그인 한 User의 Email 확인

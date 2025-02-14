@@ -37,8 +37,16 @@ public class User extends BaseEntity {
     @ElementCollection(fetch = FetchType.EAGER)
     private List<String> roles = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Question> questions = new ArrayList<>();
+
+    public void quitUser() {
+        this.userStatus = UserStatus.USER_QUIT;
+
+        if (questions != null) {
+            questions.forEach(question -> question.setQuestionStatus(Question.QuestionStatus.QUESTION_DEACTIVED));
+        }
+    }
 
     private UserStatus userStatus = UserStatus.USER_ACTIVE;
 

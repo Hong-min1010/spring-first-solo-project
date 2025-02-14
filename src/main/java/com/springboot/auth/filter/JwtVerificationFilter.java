@@ -86,6 +86,7 @@ public class JwtVerificationFilter extends OncePerRequestFilter {
 
         CustomUserDetails customUserDetails = new CustomUserDetails(userDetail.getUserId(), username);
 
+//        Long currentUserId = customUserDetails.getUserId();
         // 인증 객체 생성(비밀번호는 JWT기반 인증이므로 null 설정)
         Authentication authentication = new UsernamePasswordAuthenticationToken(customUserDetails, null, authorities);
 

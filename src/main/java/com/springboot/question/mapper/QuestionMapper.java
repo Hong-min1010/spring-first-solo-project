@@ -1,5 +1,7 @@
 package com.springboot.question.mapper;
 
+import com.springboot.answer.dto.AnswerResponseDto;
+import com.springboot.answer.entity.Answer;
 import com.springboot.question.dto.QuestionPatchDto;
 import com.springboot.question.dto.QuestionPostDto;
 import com.springboot.question.dto.QuestionResponseDto;
@@ -14,6 +16,9 @@ import java.util.List;
 public interface QuestionMapper{
     Question questionPostDtoToQuestion(QuestionPostDto questionPostDto);
     Question questionPatchDtoToQuestion(QuestionPatchDto questionPatchDto);
+//    // Question을 QuestionDto로 변환 하면서 Answer 같이 반환
+//    @Mapping(source = "answers", target = "answers")
     QuestionResponseDto questionToQuestionResponseDto(Question question);
     List<QuestionResponseDto> questionsToQuestionResponses(List<Question> questions);
+    AnswerResponseDto answerToAnswerResponseDto(Answer answer);
 }
