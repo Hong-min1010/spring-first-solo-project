@@ -74,12 +74,20 @@ public class QuestionService {
     public Question updateQuestion(Long questionId, Long userId, Question question) {
         Question findQuestion = findVerifiedQuestion(questionId);
 
-        if (question.getQuestionStatus() == Question.QuestionStatus.QUESTION_ANSWERED ||
-                !question.getUser().getUserId().equals(userId)) {
+        if (findQuestion.getUser() == null || !findQuestion.getUser().getUserId().equals(userId)) {
             throw new BusinessLogicException(ExceptionCode.QUESTION_FORBIDDEN);
         }
 
-        return question;
+        if (findQuestion.getQuestionStatus() == Question.QuestionStatus.QUESTION_ANSWERED) {
+            throw new BusinessLogicException(ExceptionCode.QUESTION_FORBIDDEN);
+        }
+
+        Optional.ofNullable(question.getTitle())
+                .ifPresent(findQuestion::setTitle);
+        Optional.ofNullable(question.getQuestionContext())
+                .ifPresent(findQuestion::setQuestionContext);
+
+        return questionRepository.save(findQuestion);
     }
 
     // LikeCount를 증가 시키는 메서드 생성

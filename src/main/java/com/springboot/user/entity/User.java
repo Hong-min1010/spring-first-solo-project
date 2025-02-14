@@ -33,6 +33,7 @@ public class User extends BaseEntity {
     private String password;
 
     // User마다 권한 부여 -> 자동 테이블 생성(h2)
+    @Column(nullable = false)
     @ElementCollection(fetch = FetchType.EAGER)
     private List<String> roles = new ArrayList<>();
 

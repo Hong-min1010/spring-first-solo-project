@@ -2,12 +2,14 @@ package com.springboot.config;
 
 import com.springboot.auth.handler.UserAccessDeniedHandler;
 import com.springboot.auth.handler.UserAuthenticationEntryPoint;
+import com.springboot.auth.userdetailservice.UsersDetailService;
 import com.springboot.auth.utils.AuthorityUtils;
 import com.springboot.auth.filter.JwtAuthenticationFilter;
 import com.springboot.auth.filter.JwtVerificationFilter;
 import com.springboot.auth.handler.UserAuthenticationFailureHandler;
 import com.springboot.auth.handler.UserAuthenticationSuccessHandler;
 import com.springboot.auth.jwt.JwtTokenizer;
+import com.springboot.user.service.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -30,11 +32,14 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class SecurityConfiguration {
     private final JwtTokenizer jwtTokenizer;
     private final AuthorityUtils authorityUtils;
+    private final UsersDetailService usersDetailService;
 
     public SecurityConfiguration(JwtTokenizer jwtTokenizer,
-                                 AuthorityUtils authorityUtils) {
+                                 AuthorityUtils authorityUtils,
+                                 UsersDetailService usersDetailService) {
         this.jwtTokenizer = jwtTokenizer;
         this.authorityUtils = authorityUtils;
+        this.usersDetailService = usersDetailService;
     }
 
     @Bean
@@ -157,7 +162,7 @@ public class SecurityConfiguration {
             jwtAuthenticationFilter.setAuthenticationFailureHandler(new UserAuthenticationFailureHandler());
 
             // JWT 검증 필터 설정
-            JwtVerificationFilter jwtVerificationFilter = new JwtVerificationFilter(jwtTokenizer, authorityUtils);
+            JwtVerificationFilter jwtVerificationFilter = new JwtVerificationFilter(jwtTokenizer, authorityUtils, usersDetailService);
 
             // FilterChain에 추가 (인증필터 後 검증 필터 실행)
             builder.addFilter(jwtAuthenticationFilter)

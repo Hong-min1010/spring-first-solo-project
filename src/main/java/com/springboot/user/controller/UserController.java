@@ -1,5 +1,7 @@
 package com.springboot.user.controller;
 
+import com.springboot.auth.userdetailservice.UsersDetailService;
+import com.springboot.auth.utils.CustomUserDetails;
 import com.springboot.dto.MultiResponseDto;
 import com.springboot.dto.SingleResponseDto;
 import com.springboot.exception.BusinessLogicException;
@@ -14,7 +16,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -53,13 +54,17 @@ public class UserController {
     @PatchMapping("/{user-id}")
     public ResponseEntity patchUser(@PathVariable("user-id") Long userId,
                                     @Valid @RequestBody UserPatchDto requestBody,
-                                    @AuthenticationPrincipal UserDetails userDetails) {
+                                    @AuthenticationPrincipal CustomUserDetails customUserDetails) {
 
-        String currentUserEmail = userDetails.getUsername();
+        User findUser = userService.findUser(userId);
 
-        User findUser = userService.findVerifiedUser(userId);
+        Long foundUserId = findUser.getUserId();
 
-        if (!findUser.getEmail().equals(currentUserEmail)) {
+        Long currentUserId = customUserDetails.getUserId();
+
+//        User findUser = userService.findVerifiedUser(userId);
+
+        if (foundUserId != currentUserId) {
             throw new BusinessLogicException(ExceptionCode.USER_FORBIDDEN);
         }
 
@@ -74,7 +79,18 @@ public class UserController {
     }
 
     @GetMapping("/{user-id}")
-    public ResponseEntity getUser(@PathVariable("user-id") Long userId) {
+    public ResponseEntity getUser(@PathVariable("user-id") Long userId,
+                                  @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+
+        User findUser = userService.findUser(userId);
+
+        Long findUserId = findUser.getUserId();
+
+        Long currentUserId = customUserDetails.getUserId();
+
+        if(findUserId != currentUserId) {
+            throw new BusinessLogicException(ExceptionCode.USER_FORBIDDEN);
+        }
 
         return new ResponseEntity(
                 new SingleResponseDto<>(userService.findUser(userId)),
