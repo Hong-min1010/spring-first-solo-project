@@ -27,22 +27,21 @@ public class CheckUserRoles {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null || authentication.getAuthorities() == null) {
+        List<String> roles = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
+
+        if (!roles.contains("ROLE_ADMIN")) {
             return false;
         }
 
-        return authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .anyMatch(role -> role.equals("ROLE_ADMIN"));
+        return roles.contains("ROLE_ADMIN");
     }
 
     // User인지 검증하는 메서드 (ADMIN 제외)
     public boolean isUser () {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null || authentication.getAuthorities() == null) {
-            return false;
-        }
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         List<String> roles = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)

@@ -14,6 +14,7 @@ import com.springboot.user.mapper.UserMapper;
 import com.springboot.user.service.UserService;
 import com.springboot.utils.CheckUserRoles;
 import com.springboot.utils.UriCreator;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import java.net.URI;
 import java.util.List;
@@ -30,6 +32,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/v1/users")
 @Validated
+@Slf4j
 public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
@@ -78,18 +81,16 @@ public class UserController {
 
         // 현재 로그인 한(인증 된) 사용자의 ID 가져오기
         Long currentUserId = customUserDetails.getUserId();
-
-        System.out.println("Current User Id: " + currentUserId);
-//        // 현재 로그인 한 사용자의 ID와 조회 하려는 User의 ID가 같은지 확인
+        //        // 현재 로그인 한 사용자의 ID와 조회 하려는 User의 ID가 같은지 확인
         // 수정 -> 전체 주석 처리 : 이 로직을 작성하게 되면 ADMIN의 ID와 USER의 ID가 맞지 않으면
         // Exception이 발생하기 때문에 주석처리 함
 //        userService.matchUserId(userId, customUserDetails);
 
+        User user = userService.findUser(userId);
+
         if (!checkUserRoles.isAdmin() && !currentUserId.equals(userId)) {
             throw new BusinessLogicException(ExceptionCode.USER_FORBIDDEN);
         }
-
-        User user = userService.findUser(userId);
 
         UserResponseDto responseDto = new UserResponseDto(
                 user.getUserId(),
@@ -105,7 +106,11 @@ public class UserController {
     @GetMapping
     public ResponseEntity getUsers(@Positive @RequestParam int page,
                                    @Positive @RequestParam int size) {
-        Page<User> pageUsers = userService.findUsers(page - 1, size);
+
+        if (!checkUserRoles.isAdmin()) {
+            throw new BusinessLogicException(ExceptionCode.USER_FORBIDDEN);
+        }
+        Page<User> pageUsers = userService.findUsers(page, size);
         List<User> users = pageUsers.getContent();
         return new ResponseEntity(
                 new MultiResponseDto<>(userMapper.usersToUsersResponses(users), pageUsers),

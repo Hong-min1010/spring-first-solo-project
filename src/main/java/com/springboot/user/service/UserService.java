@@ -7,6 +7,7 @@ import com.springboot.exception.ExceptionCode;
 import com.springboot.helper.event.UserRegistrationApplicationEvent;
 import com.springboot.user.entity.User;
 import com.springboot.user.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Transactional
 @Service
 public class UserService {
@@ -79,8 +81,9 @@ public class UserService {
 
     public Page<User> findUsers (int page, int size) {
 
+        log.info("page: {}", page);
         return userRepository.findAll(PageRequest.of(page - 1, size,
-                Sort.by("memberId").descending()));
+                Sort.by("userId").descending()));
     }
 
     public void deleteUser(Long userId) {
