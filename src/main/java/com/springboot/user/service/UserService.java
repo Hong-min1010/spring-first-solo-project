@@ -92,8 +92,6 @@ public class UserService {
 
         user.quitUser();
 
-        userRepository.deleteById(userId);
-
         userRepository.save(user);
     }
 
