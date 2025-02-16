@@ -15,7 +15,8 @@ import java.util.stream.Collectors;
 @Component
 public class CheckUserRoles {
     // 로그인 한 사용자와 수정하고싶은 user의 Id 를 비교하는 메서드
-    private void matchUserId(Long userId, Long currentUserId) {
+
+    public void matchUserId(Long userId, Long currentUserId) {
 
         if (!userId.equals(currentUserId)) {
             throw new BusinessLogicException(ExceptionCode.USER_FORBIDDEN);
