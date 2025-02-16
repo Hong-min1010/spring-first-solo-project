@@ -7,6 +7,7 @@ import com.springboot.user.entity.User;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.DynamicInsert;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -39,7 +40,7 @@ public class Question extends BaseEntity {
     private User user;
 
     @Enumerated(EnumType.STRING)
-    private QuestionStatus questionStatus = QuestionStatus.QUESTION_REGISTERED;
+    private QuestionStatus questionStatus;
 
     public enum QuestionStatus {
         // 질문 등록
@@ -50,7 +51,7 @@ public class Question extends BaseEntity {
         QUESTION_DEACTIVED("질문 비활성화 상태");
 
         @Getter
-        private String status;
+        private final String status;
 
         QuestionStatus(String status) {
             this.status = status;
@@ -58,7 +59,7 @@ public class Question extends BaseEntity {
     }
 
     @Enumerated(EnumType.STRING)
-    private QuestionVisibility questionVisibility = QuestionVisibility.QUESTION_PUBLIC;
+    private QuestionVisibility questionVisibility;
 
     public enum QuestionVisibility {
         QUESTION_PUBLIC,
@@ -90,5 +91,17 @@ public class Question extends BaseEntity {
     public void decreaseLikeCount() {
         // decreaseLikeCount가 호출 될때마다 LikeCount 1씩 감소 (최소값 = 0)
         this.likeCount = Math.max(0, this.likeCount - 1);
+    }
+
+    // Entity가 저장되기 전 강제로 값 설정하는 애너테이션
+    @PrePersist
+    public void prePersist() {
+        if (this.questionStatus == null) {
+            this.questionStatus = QuestionStatus.QUESTION_REGISTERED;
+        }
+
+        if (this.questionVisibility == null) {
+            this.questionVisibility = QuestionVisibility.QUESTION_PUBLIC;
+        }
     }
 }

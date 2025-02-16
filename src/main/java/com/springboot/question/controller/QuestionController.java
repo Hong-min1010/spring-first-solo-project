@@ -50,11 +50,16 @@ public class QuestionController {
     }
 
     @PostMapping
-    public ResponseEntity postQuestion(@Valid @RequestBody QuestionPostDto requestBody) {
+    public ResponseEntity postQuestion(@Valid @RequestBody QuestionPostDto requestBody,
+                                       @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+
+       User user = userService.findVerifiedUser(requestBody.getUserId());
 
         Question question = questionMapper.questionPostDtoToQuestion(requestBody);
 
-        Question createdQuestion = questionService.createQuestion(question);
+        question.setUser(user);
+
+        Question createdQuestion = questionService.createQuestion(question, customUserDetails);
 
         URI location = UriCreator.createUri("/v1/questions", createdQuestion.getQuestionId());
 

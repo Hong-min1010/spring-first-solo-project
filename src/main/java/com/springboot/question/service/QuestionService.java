@@ -2,7 +2,6 @@ package com.springboot.question.service;
 
 import com.springboot.answer.dto.AnswerResponseDto;
 import com.springboot.answer.repository.AnswerRepository;
-import com.springboot.auth.userdetailservice.UsersDetailService;
 import com.springboot.auth.utils.CustomUserDetails;
 import com.springboot.exception.BusinessLogicException;
 import com.springboot.exception.ExceptionCode;
@@ -10,8 +9,6 @@ import com.springboot.question.dto.QuestionResponseDto;
 import com.springboot.question.entity.Question;
 import com.springboot.question.mapper.QuestionMapper;
 import com.springboot.question.repository.QuestionRepository;
-import com.springboot.user.entity.User;
-import com.springboot.user.repository.UserRepository;
 import com.springboot.user.service.UserService;
 import com.springboot.utils.CheckUserRoles;
 import org.springframework.data.domain.Page;
@@ -37,6 +34,7 @@ public class QuestionService {
                            UserService userService,
                            CheckUserRoles checkUserRoles,
                            QuestionMapper questionMapper) {
+
         this.questionRepository = questionRepository;
         this.answerRepository = answerRepository;
         this.userService = userService;
@@ -44,11 +42,19 @@ public class QuestionService {
         this.questionMapper = questionMapper;
     }
 
-    public Question createQuestion(Question question) {
+    public Question createQuestion(Question question,
+                                   CustomUserDetails customUserDetails) {
 
-        checkUserRoles.isUser();
+        Long currentUserId = customUserDetails.getUserId();
 
-        userService.verifyExistsEmail(question.getUser().getEmail());
+        System.out.println("Current UserId: " +currentUserId);
+        System.out.println("Requested UserId: " + question.getUser().getUserId());
+
+        if (checkUserRoles.isAdmin()) {
+            throw new BusinessLogicException(ExceptionCode.USER_FORBIDDEN);
+        }
+
+        checkUserRoles.matchUserId(question.getUser().getUserId(), currentUserId);
 
         return questionRepository.save(question);
     }
