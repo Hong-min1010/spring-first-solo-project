@@ -9,7 +9,6 @@ import com.springboot.question.dto.QuestionPostDto;
 import com.springboot.question.dto.QuestionResponseDto;
 import com.springboot.question.entity.Question;
 import com.springboot.question.mapper.QuestionMapper;
-import com.springboot.question.repository.QuestionRepository;
 import com.springboot.question.service.QuestionService;
 import com.springboot.user.entity.User;
 import com.springboot.user.service.UserService;
@@ -19,7 +18,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +25,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import java.net.URI;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/v1/questions")
@@ -36,16 +33,13 @@ public class QuestionController {
     private final QuestionService questionService;
     private final UserService userService;
     private final QuestionMapper questionMapper;
-    private final QuestionRepository questionRepository;
     private final CheckUserRoles checkUserRoles;
 
     public QuestionController(QuestionService questionService, QuestionMapper questionMapper,
-                              UserService userService, QuestionRepository questionRepository,
-                              CheckUserRoles checkUserRoles) {
+                              UserService userService, CheckUserRoles checkUserRoles) {
         this.questionService = questionService;
         this.questionMapper = questionMapper;
         this.userService = userService;
-        this.questionRepository = questionRepository;
         this.checkUserRoles = checkUserRoles;
     }
 
@@ -73,14 +67,12 @@ public class QuestionController {
 
         Long currentId = customUserDetails.getUserId();
 
-
-
         Question updateQuestion =
                 questionService.updateQuestion(questionId, currentId, questionMapper.questionPatchDtoToQuestion(requestBody));
 
         QuestionResponseDto responseDto = questionMapper.questionToQuestionResponseDto(updateQuestion);
 
-        return new ResponseEntity(
+        return new ResponseEntity<>(
                 new SingleResponseDto<>(new SingleResponseDto<>(responseDto)), HttpStatus.OK
         );
     }
@@ -97,7 +89,7 @@ public class QuestionController {
         if (!checkUserRoles.isAdmin() || !currentUseId.equals(userId)) {
             throw new BusinessLogicException(ExceptionCode.USER_FORBIDDEN);
         }
-        return new ResponseEntity(
+        return new ResponseEntity<>(
                 new SingleResponseDto<>(new SingleResponseDto<>(responseDto)), HttpStatus.OK
         );
     }
@@ -107,20 +99,30 @@ public class QuestionController {
                                        @Positive @RequestParam int size) {
         Page<Question> pageQuestions = questionService.findQuestions(page - 1, size);
         List<Question> questions = pageQuestions.getContent();
-        return new ResponseEntity(
+        return new ResponseEntity<>(
                 new SingleResponseDto<>(new SingleResponseDto<>(questions)), HttpStatus.OK
         );
     }
 
     @DeleteMapping("/{question-id}")
     public ResponseEntity deleteQuestion(@PathVariable("question-id") @Positive Long questionId,
-                                         User user,
+                                         @RequestParam("user-id") Long userId,
                                          @AuthenticationPrincipal CustomUserDetails customUserDetails) {
 
-        userService.matchUserId(user.getUserId(), customUserDetails);
+        Long currentUserId = customUserDetails.getUserId();
 
-        questionService.deleteQuestion(questionId);
+        Question question = questionService.findVerifiedQuestion(questionId);
 
-        return new ResponseEntity(HttpStatus.NO_CONTENT);
+        Long questionOwnerId = question.getUser().getUserId();
+
+        userService.matchUserId(userId, customUserDetails);
+
+        if (!checkUserRoles.isAdmin() && !currentUserId.equals(questionOwnerId)) {
+            throw new BusinessLogicException(ExceptionCode.USER_FORBIDDEN);
+        }
+
+        questionService.deleteQuestion(questionId, customUserDetails);
+
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

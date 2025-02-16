@@ -107,12 +107,22 @@ public class QuestionService {
         return questionPage;
     }
 
-    public void deleteQuestion(long questionId) {
+    public void deleteQuestion(long questionId, CustomUserDetails customUserDetails) {
         // 작성자가 User인지 확인하는 메서드 (사용 안해도 됨)
 //        checkUserRoles.isUser();
+//        System.out.println("Received questionId: " + questionId);
+
+        // login 한 사용자
+        Long currentUserId = customUserDetails.getUserId();
+//        System.out.println("현재 로그인한 사용자 ID: " + currentUserId);
 
         // 질문을 등록 한 사용자만 삭제 가능
         Question question = findVerifiedQuestion(questionId);
+//        System.out.println("질문 작성자 ID: " + question.getUser().getUserId());
+
+        if (!question.getUser().getUserId().equals(currentUserId)) {
+            throw new BusinessLogicException(ExceptionCode.USER_FORBIDDEN);
+        }
 
         question.setQuestionStatus(Question.QuestionStatus.QUESTION_DELETED);
 
