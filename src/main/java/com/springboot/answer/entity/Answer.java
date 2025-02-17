@@ -36,6 +36,7 @@ public class Answer extends BaseEntity {
         if (question.getAnswer() != this) {
             question.setAnswer(this);
         }
+
     }
 
     private AnswerStatus answerStatus = AnswerStatus.ANSWER_PUBLIC;

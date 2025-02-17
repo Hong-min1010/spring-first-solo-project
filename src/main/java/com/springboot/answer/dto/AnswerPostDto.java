@@ -10,7 +10,6 @@ import javax.validation.constraints.NotBlank;
 @Setter
 @NoArgsConstructor
 public class AnswerPostDto {
-
     @NotBlank
     private String answerContext;
 }

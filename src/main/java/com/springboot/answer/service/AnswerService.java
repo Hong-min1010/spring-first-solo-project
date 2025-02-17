@@ -1,13 +1,22 @@
 package com.springboot.answer.service;
 
+import com.springboot.answer.dto.AnswerResponseDto;
 import com.springboot.answer.entity.Answer;
 import com.springboot.answer.repository.AnswerRepository;
+import com.springboot.auth.utils.CustomUserDetails;
+import com.springboot.exception.BusinessLogicException;
+import com.springboot.exception.ExceptionCode;
+import com.springboot.question.entity.Question;
 import com.springboot.question.repository.QuestionRepository;
+import com.springboot.question.service.QuestionService;
+import com.springboot.user.entity.User;
+import com.springboot.user.service.UserService;
 import com.springboot.utils.CheckUserRoles;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Transactional
 @Service
@@ -15,36 +24,83 @@ public class AnswerService {
     private final AnswerRepository answerRepository;
     private final QuestionRepository questionRepository;
     private final CheckUserRoles checkUserRoles;
+    private final QuestionService questionService;
+    private final UserService userService;
 
     // Answer = Admin만 작성할 수 있음
     public AnswerService(AnswerRepository answerRepository,
                          QuestionRepository questionRepository,
-                         CheckUserRoles checkUserRoles) {
+                         CheckUserRoles checkUserRoles,
+                         QuestionService questionService,
+                         UserService userService) {
         this.answerRepository = answerRepository;
         this.questionRepository = questionRepository;
         this.checkUserRoles = checkUserRoles;
+        this.questionService = questionService;
+        this.userService = userService;
     }
 
-    public Answer createAnswer(Answer answer) {
+    public Answer createAnswer(String answerContext, Long questionId, CustomUserDetails customUserDetails) {
 
-        return null;
+        if (!checkUserRoles.isAdmin()) {
+            throw new BusinessLogicException(ExceptionCode.USER_FORBIDDEN);
+        }
+
+        Question question = questionService.findVerifiedQuestion(questionId);
+
+        if (question.getQuestionStatus() == Question.QuestionStatus.QUESTION_ANSWERED) {
+            throw new BusinessLogicException(ExceptionCode.ANSWER_ALREADY_EXISTS);
+        }
+
+        question.setQuestionStatus(Question.QuestionStatus.QUESTION_ANSWERED);
+
+        Answer answer = new Answer();
+        answer.setAnswerContext(answerContext);
+        answer.setQuestion(question);
+        answer.setUser(userService.findVerifiedUser(customUserDetails.getUserId()));
+
+
+        return answerRepository.save(answer);
     }
 
-    public void deleteAnswer(Long answerId) {
+    public void deleteAnswer(Long questionId) {
+        checkUserRoles.isAdmin();
 
+        Question question = questionService.findVerifiedQuestion(questionId);
+
+        Answer answer = question.getAnswer();
+
+        if (answer == null) {
+            throw new BusinessLogicException(ExceptionCode.ANSWER_NOT_FOUND);
+        }
+
+        answerRepository.delete(answer);
     }
 
-    public Answer updateAnswer(Long answerId) {
-        return null;
+    public Answer updateAnswer(Long questionId, String answerContext) {
+
+        checkUserRoles.isAdmin();
+
+        Question question = questionService.findVerifiedQuestion(questionId);
+
+        Answer answer = question.getAnswer();
+
+        if (answer == null) {
+            throw new BusinessLogicException(ExceptionCode.ANSWER_NOT_FOUND);
+        }
+
+        Optional.ofNullable(answerContext)
+                .ifPresent(answer::setAnswerContext);
+
+        return answerRepository.save(answer);
     }
 
-    public Answer getAnswer(Long answerId) {
-        return null;
+    public AnswerResponseDto convertToAnswerResponseDto(Answer answer) {
+        return new AnswerResponseDto(answer.getAnswerId(),
+                answer.getUser().getUserId(),
+                answer.getUser().getName(),
+                answer.getAnswerContext(),
+                answer.getQuestion().getQuestionId() );
     }
 
-    public List<String> getAnswers(int page,
-                                   int size) {
-
-        return null;
-    }
 }
