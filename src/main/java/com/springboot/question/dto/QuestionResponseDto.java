@@ -5,15 +5,13 @@ import com.springboot.answer.entity.Answer;
 import com.springboot.like.entity.Like;
 import com.springboot.question.entity.Question;
 import com.springboot.user.entity.User;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.List;
 
-@Setter
-@NoArgsConstructor
 @Getter
+@AllArgsConstructor
+@Builder
 public class QuestionResponseDto {
     private Long questionId;
     private String title;
@@ -24,6 +22,6 @@ public class QuestionResponseDto {
     private Question.QuestionVisibility questionVisibility;
     private String userName;
     // 답변 목록 추가
-    private List<AnswerResponseDto> answers;
+    private AnswerResponseDto answer;
 
 }

@@ -36,7 +36,7 @@ public class Question extends BaseEntity {
     private Answer answer;
 
     @JoinColumn(name = "USER_ID")
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     private User user;
 
     @Enumerated(EnumType.STRING)
@@ -73,8 +73,9 @@ public class Question extends BaseEntity {
         this.user = user;
 
         if (!user.getQuestions().contains(this)) {
-            user.getQuestions().add(this);
+            user.setQuestions(this);
         }
+
     }
 
     public void setAnswer(Answer answer) {

@@ -48,48 +48,32 @@ public class QuestionService {
         Long currentUserId = customUserDetails.getUserId();
 
         System.out.println("Current UserId: " +currentUserId);
-        System.out.println("Requested UserId: " + question.getUser().getUserId());
 
         if (checkUserRoles.isAdmin()) {
             throw new BusinessLogicException(ExceptionCode.USER_FORBIDDEN);
         }
 
-        checkUserRoles.matchUserId(question.getUser().getUserId(), currentUserId);
-
+        System.out.println("Requested UserId: " + question.getUser().getUserId());
+        checkUserRoles.matchUserId(question.getUser().getUserId(), customUserDetails);
+        System.out.println("Comparing UserIds -> Question Owner: " + question.getUser().getUserId() + ", Current User: " + currentUserId);
         return questionRepository.save(question);
     }
 
-    public QuestionResponseDto findQuestion(Long questionId, Long userId, CustomUserDetails customUserDetails) {
+    public Question findQuestion(Long questionId, Long currentId) {
 
         Question question = findVerifiedQuestion(questionId);
 
-        checkSecretQuestion(question, userId, customUserDetails);
+        Long userId = question.getUser().getUserId();
 
-        if(question.getQuestionVisibility() == Question.QuestionVisibility.QUESTION_SECRET) {
-            boolean isAuthor = userId.equals(customUserDetails.getUserId());
-            boolean isAdmin = checkUserRoles.isAdmin();
-            if (!(isAuthor || isAdmin)) {
-                throw new BusinessLogicException(ExceptionCode.QUESTION_FORBIDDEN);
-            }
-        }
+
+        verifyQuestionDeleteStatus(question);
 
         question.setViewCount(question.getViewCount() + 1);
 
         questionRepository.save(question);
 
-        // Dto를 어떻게 구성할지 결정하는 로직이 포함될 때 Service에서 처리해도 가능 !
-        AnswerResponseDto answer = answerRepository.findAnswerByQuestion(question.getQuestionId())
-                .map(questionMapper::answerToAnswerResponseDto)
-                .orElse(null);
 
-        QuestionResponseDto responseDto = questionMapper.questionToQuestionResponseDto(question);
-        if(answer != null) {
-            // Collections.singletonList -> 불변의 리스트를 생성하는 메서드
-            // 항상 하나의 답변만 담긴 리스트를 반환
-            responseDto.setAnswers(Collections.singletonList(answer));
-        }
-
-        return responseDto;
+        return question;
     }
 
     public Page<Question> findQuestions(int page, int size) {
@@ -148,7 +132,9 @@ public class QuestionService {
         Optional.ofNullable(question.getQuestionContext())
                 .ifPresent(findQuestion::setQuestionContext);
 
-        return questionRepository.save(question);
+        findQuestion.setUser(findQuestion.getUser());
+
+        return questionRepository.save(findQuestion);
     }
 
     // LikeCount를 증가 시키는 메서드 생성
@@ -166,35 +152,29 @@ public class QuestionService {
     // 질문이 존재하는지 확인하는 메서드 생성
     public Question findVerifiedQuestion(Long questionId) {
         Optional<Question> optionalQuestion =
-                questionRepository.findById(questionId);
-        Question findQuestion =
-                optionalQuestion.orElseThrow(() ->
-                        new BusinessLogicException(ExceptionCode.QUESTION_NOT_FOUND));
+                questionRepository.findWithUserByQuestionId(questionId);  // questionId를 넘기도록 수정
 
-        return findQuestion;
+        if (!optionalQuestion.isPresent()) {
+            throw new BusinessLogicException(ExceptionCode.QUESTION_NOT_FOUND);
+        }
+        return optionalQuestion.get();
+    }
+
+    public void verifyQuestionDeleteStatus(Question question) {
+        if(question.getQuestionStatus() == Question.QuestionStatus.QUESTION_DELETED) {
+            throw new BusinessLogicException(ExceptionCode.QUESTION_NOT_FOUND);
+        }
     }
 
     // Secret Question일 경우 작성자와 ADMIN만 확인 가능
-    public void checkSecretQuestion(Question question, Long userId, CustomUserDetails customUserDetails) {
-
-        if(question.getQuestionVisibility() == Question.QuestionVisibility.QUESTION_SECRET) {
-            boolean isAuthor = userId.equals(customUserDetails.getUserId());
-            boolean isAdmin = checkUserRoles.isAdmin();
-            if (!(isAuthor || isAdmin)) {
-                throw new BusinessLogicException(ExceptionCode.QUESTION_FORBIDDEN);
-            }
-        }
-    }
-
-    private QuestionResponseDto convertToResponseDto(Question question) {
-
-        QuestionResponseDto responseDto = questionMapper.questionToQuestionResponseDto(question);
-
-        if (question.getQuestionVisibility() == Question.QuestionVisibility.QUESTION_SECRET) {
-            responseDto.setTitle("비공개 질문입니다.");
-        }
-        return responseDto;
-    }
-
-
+//    public void checkSecretQuestion(Question question, CustomUserDetails customUserDetails) {
+//
+//        if(question.getQuestionVisibility() == Question.QuestionVisibility.QUESTION_SECRET) {
+////            boolean isAuthor = userId.equals(customUserDetails.getUserId());
+//            boolean isAdmin = checkUserRoles.isAdmin();
+//            if (!(isAuthor || isAdmin)) {
+//                throw new BusinessLogicException(ExceptionCode.QUESTION_FORBIDDEN);
+//            }
+//        }
+//    }
 }
