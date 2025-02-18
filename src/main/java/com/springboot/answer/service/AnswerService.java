@@ -50,6 +50,10 @@ public class AnswerService {
 
         question.setQuestionStatus(Question.QuestionStatus.QUESTION_ANSWERED);
 
+        if (question.getQuestionVisibility() == Question.QuestionVisibility.QUESTION_SECRET) {
+            answer.setAnswerContext("비공개 답변입니다.");
+        }
+
 
         answer.setQuestion(question);
         answer.setUser(userService.findVerifiedUser(customUserDetails.getUserId()));
@@ -94,10 +98,7 @@ public class AnswerService {
 
     public AnswerResponseDto convertToAnswerResponseDto(Answer answer) {
         return new AnswerResponseDto(answer.getAnswerId(),
-                answer.getUser().getUserId(),
-                answer.getUser().getName(),
-                answer.getAnswerContext(),
-                answer.getQuestion().getQuestionId() );
+                answer.getAnswerContext());
     }
 
 }

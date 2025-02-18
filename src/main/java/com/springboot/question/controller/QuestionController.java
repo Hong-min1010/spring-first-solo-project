@@ -24,6 +24,7 @@ import com.springboot.utils.UriCreator;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +32,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -94,20 +96,34 @@ public class QuestionController {
         );
     }
 
+    @PreAuthorize("hasRole('ADMIN') or @questionService.isAuthorOrAdmin(#questionId, authentication.name)")
     @GetMapping("/{question-id}")
     public ResponseEntity getQuestion(@PathVariable("question-id") Long questionId,
                                       @AuthenticationPrincipal CustomUserDetails customUserDetails) {
 
         Question question = questionService.findQuestion(questionId, customUserDetails.getUserId());
 
-
-        Long currentUseId = customUserDetails.getUserId();
+//        Long currentUseId = customUserDetails.getUserId();
 //        System.out.println("Authenticated User ID: " + currentUseId);
-        if (!question.getUser().getUserId().equals(currentUseId)) {
-            throw new BusinessLogicException(ExceptionCode.USER_FORBIDDEN);
-        }
+//        if (!question.getUser().getUserId().equals(currentUseId)) {
+//            throw new BusinessLogicException(ExceptionCode.USER_FORBIDDEN);
+//        }
+
+        String questionContext = question.getQuestionVisibility() == Question.QuestionVisibility.QUESTION_SECRET
+                ? "비밀글입니다."
+                : question.getQuestionContext();
+
+        String title = question.getQuestionVisibility() == Question.QuestionVisibility.QUESTION_SECRET
+                ? "SECRET"
+                : question.getTitle();
+
 
         QuestionResponseDto questionResponseDto = questionMapper.questionToQuestionResponseDto(question);
+
+        questionResponseDto = questionResponseDto.toBuilder()
+                .title(title)
+                .questionContext(questionContext)
+                .build();
 
         return new ResponseEntity<>(new SingleResponseDto<>(questionResponseDto), HttpStatus.OK);
     }
@@ -123,7 +139,20 @@ public class QuestionController {
                                        @Positive @RequestParam int size) {
         Page<Question> pageQuestions = questionService.findQuestions(page, size);
         List<Question> questions = pageQuestions.getContent();
+
         List<QuestionResponseDto> list = questionMapper.questionsToQuestionResponses(questions);
+
+        for (int i = 0; i < list.size(); i++) {
+            QuestionResponseDto questionResponseDto = list.get(i);
+            if (questions.get(i).getQuestionVisibility() == Question.QuestionVisibility.QUESTION_SECRET) {
+                questionResponseDto = questionResponseDto.toBuilder()
+                        .title("SECRET")
+                        .questionContext("비공개글입니다.")
+                        .build();
+                list.set(i, questionResponseDto);  // 변경된 dto 다시 리스트에 반영
+            }
+        }
+
         return new ResponseEntity<>(
                 new MultiResponseDto<>(list, pageQuestions), HttpStatus.OK
         );

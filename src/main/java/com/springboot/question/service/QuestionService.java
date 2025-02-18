@@ -5,10 +5,15 @@ import com.springboot.answer.repository.AnswerRepository;
 import com.springboot.auth.utils.CustomUserDetails;
 import com.springboot.exception.BusinessLogicException;
 import com.springboot.exception.ExceptionCode;
+import com.springboot.like.dto.LikeResponseDto;
+import com.springboot.like.entity.Like;
+import com.springboot.like.repository.LikeRepository;
 import com.springboot.question.dto.QuestionResponseDto;
 import com.springboot.question.entity.Question;
 import com.springboot.question.mapper.QuestionMapper;
 import com.springboot.question.repository.QuestionRepository;
+import com.springboot.user.entity.User;
+import com.springboot.user.repository.UserRepository;
 import com.springboot.user.service.UserService;
 import com.springboot.utils.CheckUserRoles;
 import org.springframework.data.domain.Page;
@@ -17,6 +22,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -25,12 +31,16 @@ import java.util.stream.Collectors;
 public class QuestionService {
     private final QuestionRepository questionRepository;
     private final CheckUserRoles checkUserRoles;
+    private final LikeRepository likeRepository;
+    private final UserRepository userRepository;
 
     public QuestionService(QuestionRepository questionRepository,
-                           CheckUserRoles checkUserRoles) {
+                           CheckUserRoles checkUserRoles, LikeRepository likeRepository, UserRepository userRepository) {
 
         this.questionRepository = questionRepository;
         this.checkUserRoles = checkUserRoles;
+        this.likeRepository = likeRepository;
+        this.userRepository = userRepository;
     }
 
     public Question createQuestion(Question question,
@@ -54,8 +64,13 @@ public class QuestionService {
 
         Question question = findVerifiedQuestion(questionId);
 
-//        Long userId = question.getUser().getUserId();
+        if (question.getQuestionVisibility() == Question.QuestionVisibility.QUESTION_SECRET) {
+            if (!question.getUser().getUserId().equals(currentId) && !checkUserRoles.isAdmin()) {
+                question.setQuestionContext("비밀글입니다.");
+            }
+        }
 
+//        Long userId = question.getUser().getUserId();
 
         verifyQuestionDeleteStatus(question);
 
@@ -78,6 +93,15 @@ public class QuestionService {
                         Question.QuestionStatus.QUESTION_DEACTIVED
                 ),
                 PageRequest.of(page - 1, size, Sort.by("questionId").descending()));
+
+        List<Question> questions = questionPage.getContent();
+
+        for (Question question : questions) {
+            if (question.getQuestionVisibility() == Question.QuestionVisibility.QUESTION_SECRET) {
+                question.setTitle("SECRET");
+                question.setQuestionContext("비공개글입니다.");
+            }
+        }
 
         return questionPage;
     }
@@ -176,15 +200,44 @@ public class QuestionService {
         }
     }
 
-    // Secret Question일 경우 작성자와 ADMIN만 확인 가능
-//    public void checkSecretQuestion(Question question, CustomUserDetails customUserDetails) {
-//
-//        if(question.getQuestionVisibility() == Question.QuestionVisibility.QUESTION_SECRET) {
-////            boolean isAuthor = userId.equals(customUserDetails.getUserId());
-//            boolean isAdmin = checkUserRoles.isAdmin();
-//            if (!(isAuthor || isAdmin)) {
-//                throw new BusinessLogicException(ExceptionCode.QUESTION_FORBIDDEN);
-//            }
-//        }
-//    }
+    private QuestionResponseDto convertToResponseDto(Question question) {
+        List<Like> likes = likeRepository.findByQuestion(question);
+
+        AnswerResponseDto  answerResponseDto = null;
+        if (question.getAnswer() != null) {
+            Long answerId = question.getAnswer().getAnswerId();
+            String content = question.getAnswer().getAnswerContext(); // 예시로 content도 가져오는 것
+            Long userId = question.getAnswer().getUser().getUserId(); // 답변을 쓴 user의 ID
+            Long questionId = question.getQuestionId(); // 해당 질문의 ID
+            String userName = question.getAnswer().getUser().getName();  // answerId를 생성자에 전달
+        }
+
+        List<LikeResponseDto> likeDtos = likes.stream()
+                .map(like -> new LikeResponseDto(
+                        like.getLikeId(),
+                        like.getQuestion().getQuestionId(),
+                        like.getUser().getUserId()
+                )).collect(Collectors.toList());
+        return new QuestionResponseDto(question.getQuestionId(),
+                question.getTitle(),
+                question.getQuestionContext(),
+                question.getViewCount(),
+                question.getLikeCount(),
+                question.getQuestionStatus(),
+                question.getQuestionVisibility(),
+                question.getUser() != null ? question.getUser().getName() : null,
+                answerResponseDto,
+                likeDtos);
+    }
+
+    public boolean isAuthorOrAdmin(Long questionId, String username) {
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new BusinessLogicException(ExceptionCode.QUESTION_NOT_FOUND));
+
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new BusinessLogicException(ExceptionCode.USER_NOT_FOUND));
+
+        return user.getRoles().contains("ADMIN") || question.getUser().getUserId().equals(user.getUserId());
+    }
+
 }
