@@ -9,23 +9,19 @@ import com.springboot.exception.ExceptionCode;
 import com.springboot.question.entity.Question;
 import com.springboot.question.repository.QuestionRepository;
 import com.springboot.question.service.QuestionService;
-import com.springboot.user.entity.User;
 import com.springboot.user.service.UserService;
 import com.springboot.utils.CheckUserRoles;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
-
 @Transactional
 @Service
 public class AnswerService {
     private final AnswerRepository answerRepository;
-    private final QuestionRepository questionRepository;
     private final CheckUserRoles checkUserRoles;
     private final QuestionService questionService;
     private final UserService userService;
+    private final QuestionRepository questionRepository;
 
     // Answer = Admin만 작성할 수 있음
     public AnswerService(AnswerRepository answerRepository,
@@ -40,7 +36,7 @@ public class AnswerService {
         this.userService = userService;
     }
 
-    public Answer createAnswer(String answerContext, Long questionId, CustomUserDetails customUserDetails) {
+    public Answer createAnswer(Answer answer, Long questionId, CustomUserDetails customUserDetails) {
 
         if (!checkUserRoles.isAdmin()) {
             throw new BusinessLogicException(ExceptionCode.USER_FORBIDDEN);
@@ -54,8 +50,7 @@ public class AnswerService {
 
         question.setQuestionStatus(Question.QuestionStatus.QUESTION_ANSWERED);
 
-        Answer answer = new Answer();
-        answer.setAnswerContext(answerContext);
+
         answer.setQuestion(question);
         answer.setUser(userService.findVerifiedUser(customUserDetails.getUserId()));
 
@@ -75,9 +70,10 @@ public class AnswerService {
         }
 
         answerRepository.delete(answer);
+        answerRepository.flush();
     }
 
-    public Answer updateAnswer(Long questionId, String answerContext) {
+    public Answer updateAnswer(Long questionId, Answer patchAnswer, CustomUserDetails customUserDetails) {
 
         checkUserRoles.isAdmin();
 
@@ -89,8 +85,9 @@ public class AnswerService {
             throw new BusinessLogicException(ExceptionCode.ANSWER_NOT_FOUND);
         }
 
-        Optional.ofNullable(answerContext)
-                .ifPresent(answer::setAnswerContext);
+        if (patchAnswer.getAnswerContext() != null) {
+            answer.setAnswerContext(patchAnswer.getAnswerContext());
+        }
 
         return answerRepository.save(answer);
     }

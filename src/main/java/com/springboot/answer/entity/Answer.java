@@ -38,18 +38,18 @@ public class Answer extends BaseEntity {
         }
 
     }
-
-    private AnswerStatus answerStatus = AnswerStatus.ANSWER_PUBLIC;
-
-    public enum AnswerStatus {
-        ANSWER_PUBLIC("공개 답글"),
-        ANSWER_SECRET("비공개 답글");
-
-        @Getter
-        private String status;
-
-        AnswerStatus(String status) {
-            this.status = status;
-        }
-    }
 }
+//    private AnswerStatus answerStatus = AnswerStatus.ANSWER_PUBLIC;
+//
+//    public enum AnswerStatus {
+//        ANSWER_PUBLIC("공개 답글"),
+//        ANSWER_SECRET("비공개 답글");
+//
+//        @Getter
+//        private String status;
+//
+//        AnswerStatus(String status) {
+//            this.status = status;
+//        }
+//    }
+//}
