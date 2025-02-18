@@ -90,7 +90,7 @@ public class QuestionController {
         }
 
         return new ResponseEntity<>(
-                new SingleResponseDto<>(new SingleResponseDto<>(responseDto)), HttpStatus.OK
+                new SingleResponseDto<>(responseDto), HttpStatus.OK
         );
     }
 
@@ -110,6 +110,12 @@ public class QuestionController {
         QuestionResponseDto questionResponseDto = questionMapper.questionToQuestionResponseDto(question);
 
         return new ResponseEntity<>(new SingleResponseDto<>(questionResponseDto), HttpStatus.OK);
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<List<Question>> getQuestions(@RequestParam("sortBy") String sortBy) {
+        List<Question> questions = questionService.getQuestionSorted(sortBy);
+        return ResponseEntity.ok(questions);
     }
 
     @GetMapping
@@ -146,16 +152,13 @@ public class QuestionController {
     }
 
     @PostMapping("/{question-id}/answers")
-    public ResponseEntity<AnswerResponseDto> createAnswer(@PathVariable("question-id") Long questionId,
-                                                          @RequestParam("answer-context") String answerContext,
+    public ResponseEntity<AnswerResponseDto> postAnswer(@PathVariable("question-id") Long questionId,
+                                                          @RequestBody AnswerPostDto answerPostDto,
                                                           @AuthenticationPrincipal CustomUserDetails customUserDetails) {
 
-        AnswerPostDto answerPostDto = new AnswerPostDto();
-        answerPostDto.setAnswerContext(answerContext);
+        Answer answer = answerMapper.answerPostDtoToAnswer(answerPostDto);
 
-//        Answer answer = answerMapper.answerPostDtoToAnswer(answerPostDto);
-
-        Answer newAnswer = answerService.createAnswer(answerContext, questionId, customUserDetails);
+        Answer newAnswer = answerService.createAnswer(answer, questionId, customUserDetails);
 
         AnswerResponseDto responseDto = answerMapper.answerToAnswerResponseDto(newAnswer);
 
@@ -163,13 +166,15 @@ public class QuestionController {
     }
 
     @PatchMapping("/{question-id}/answers")
-    public ResponseEntity<AnswerResponseDto> updateAnswer(@PathVariable("question-id") Long questionId,
-                                                          @RequestParam("answer-context") String answerContext,
+    public ResponseEntity<AnswerResponseDto> patchAnswer(@PathVariable("question-id") Long questionId,
+                                                          @RequestBody AnswerPatchDto answerPatchDto,
                                                           @AuthenticationPrincipal CustomUserDetails customUserDetails) {
 
-        Answer updateAnswer = answerService.updateAnswer(questionId, answerContext);
+        Answer patchAnswer = answerMapper.answerPatchDtoToAnswer(answerPatchDto);
 
-        AnswerResponseDto responseDto = answerService.convertToAnswerResponseDto(updateAnswer);
+        Answer updateAnswer = answerService.updateAnswer(questionId, patchAnswer, customUserDetails);
+
+        AnswerResponseDto responseDto = answerMapper.answerToAnswerResponseDto(updateAnswer);
 
         return new ResponseEntity<>(responseDto, HttpStatus.OK);
     }

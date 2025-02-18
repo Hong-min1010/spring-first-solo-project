@@ -24,22 +24,13 @@ import java.util.stream.Collectors;
 @Service
 public class QuestionService {
     private final QuestionRepository questionRepository;
-    private final AnswerRepository answerRepository;
-    private final UserService userService;
     private final CheckUserRoles checkUserRoles;
-    private final QuestionMapper questionMapper;
 
     public QuestionService(QuestionRepository questionRepository,
-                           AnswerRepository answerRepository,
-                           UserService userService,
-                           CheckUserRoles checkUserRoles,
-                           QuestionMapper questionMapper) {
+                           CheckUserRoles checkUserRoles) {
 
         this.questionRepository = questionRepository;
-        this.answerRepository = answerRepository;
-        this.userService = userService;
         this.checkUserRoles = checkUserRoles;
-        this.questionMapper = questionMapper;
     }
 
     public Question createQuestion(Question question,
@@ -47,15 +38,15 @@ public class QuestionService {
 
         Long currentUserId = customUserDetails.getUserId();
 
-        System.out.println("Current UserId: " +currentUserId);
+//        System.out.println("Current UserId: " +currentUserId);
 
         if (checkUserRoles.isAdmin()) {
             throw new BusinessLogicException(ExceptionCode.USER_FORBIDDEN);
         }
 
-        System.out.println("Requested UserId: " + question.getUser().getUserId());
+//        System.out.println("Requested UserId: " + question.getUser().getUserId());
         checkUserRoles.matchUserId(question.getUser().getUserId(), customUserDetails);
-        System.out.println("Comparing UserIds -> Question Owner: " + question.getUser().getUserId() + ", Current User: " + currentUserId);
+//        System.out.println("Comparing UserIds -> Question Owner: " + question.getUser().getUserId() + ", Current User: " + currentUserId);
         return questionRepository.save(question);
     }
 
@@ -63,7 +54,7 @@ public class QuestionService {
 
         Question question = findVerifiedQuestion(questionId);
 
-        Long userId = question.getUser().getUserId();
+//        Long userId = question.getUser().getUserId();
 
 
         verifyQuestionDeleteStatus(question);
@@ -135,6 +126,25 @@ public class QuestionService {
         findQuestion.setUser(findQuestion.getUser());
 
         return questionRepository.save(findQuestion);
+    }
+
+    public List<Question> getQuestionSorted(String sortBy) {
+        switch (sortBy) {
+            case "latest":
+                return questionRepository.findAllByOrderByCreatedAtDesc();
+            case "oldest":
+                return questionRepository.findAllByOrderByCreatedAtAsc();
+            case "likesDesc":
+                return questionRepository.findAllByOrderByLikeCountDesc();
+            case "likesAsc":
+                return questionRepository.findAllByOrderByLikeCountAsc();
+            case "viewsDesc":
+                return questionRepository.findAllByOrderByViewCountDesc();
+            case "viewsAsc":
+                return questionRepository.findAllByOrderByViewCountAsc();
+            default:
+                throw new IllegalArgumentException("Invalid sort criteria");
+        }
     }
 
     // LikeCount를 증가 시키는 메서드 생성

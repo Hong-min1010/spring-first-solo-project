@@ -39,5 +39,4 @@ public interface QuestionMapper{
        return builder.build();
    }
     List<QuestionResponseDto> questionsToQuestionResponses(List<Question> questions);
-    AnswerResponseDto answerToAnswerResponseDto(Answer answer);
 }

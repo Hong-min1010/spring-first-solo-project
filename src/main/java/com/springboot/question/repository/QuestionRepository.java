@@ -17,4 +17,17 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
 
     Page<Question> findByQuestionStatusNotIn(List<Question.QuestionStatus> statuses,
                                            Pageable pageable);
+
+    List<Question> findAllByOrderByCreatedAtDesc();
+
+    List<Question> findAllByOrderByCreatedAtAsc();
+
+    List<Question> findAllByOrderByLikeCountDesc();
+
+    List<Question> findAllByOrderByLikeCountAsc();
+
+    List<Question> findAllByOrderByViewCountDesc();
+
+    List<Question> findAllByOrderByViewCountAsc();
+
 }
