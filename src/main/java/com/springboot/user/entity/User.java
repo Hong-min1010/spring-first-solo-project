@@ -27,7 +27,8 @@ public class User extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
-    private String name;
+    @Column(nullable = false)
+    public String name;
 
     @Column(nullable = false)
     private String password;
@@ -37,7 +38,7 @@ public class User extends BaseEntity {
     @ElementCollection(fetch = FetchType.EAGER)
     private List<String> roles = new ArrayList<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user")
     private List<Question> questions = new ArrayList<>();
 
     public void quitUser() {
@@ -55,11 +56,12 @@ public class User extends BaseEntity {
         USER_QUIT
     }
 
-    public void setQuestion(Question question) {
+    public void setQuestions(Question question) {
         questions.add(question);
 
         if (question.getUser() != this) {
             question.setUser(this);
         }
+
     }
 }
