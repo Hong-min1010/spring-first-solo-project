@@ -1,5 +1,7 @@
 package com.springboot.answer.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.springboot.audit.BaseEntity;
 import com.springboot.question.entity.Question;
 import com.springboot.user.entity.User;
@@ -24,9 +26,10 @@ public class Answer extends BaseEntity {
 
     @OneToOne
     @JoinColumn(name = "QUESTION_ID")
+    @JsonBackReference
     private Question question;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "USER_ID")
     private User user;
 
@@ -39,17 +42,4 @@ public class Answer extends BaseEntity {
 
     }
 }
-//    private AnswerStatus answerStatus = AnswerStatus.ANSWER_PUBLIC;
-//
-//    public enum AnswerStatus {
-//        ANSWER_PUBLIC("공개 답글"),
-//        ANSWER_SECRET("비공개 답글");
-//
-//        @Getter
-//        private String status;
-//
-//        AnswerStatus(String status) {
-//            this.status = status;
-//        }
-//    }
-//}
+

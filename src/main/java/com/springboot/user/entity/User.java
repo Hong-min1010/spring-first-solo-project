@@ -1,5 +1,6 @@
 package com.springboot.user.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.springboot.answer.entity.Answer;
 import com.springboot.audit.BaseEntity;
 import com.springboot.like.entity.Like;
@@ -39,6 +40,7 @@ public class User extends BaseEntity {
     private List<String> roles = new ArrayList<>();
 
     @OneToMany(mappedBy = "user")
+    @JsonManagedReference
     private List<Question> questions = new ArrayList<>();
 
     public void quitUser() {

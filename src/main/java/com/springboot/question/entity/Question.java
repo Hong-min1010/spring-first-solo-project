@@ -1,5 +1,7 @@
 package com.springboot.question.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.springboot.answer.entity.Answer;
 import com.springboot.audit.BaseEntity;
 import com.springboot.like.entity.Like;
@@ -33,10 +35,12 @@ public class Question extends BaseEntity {
     private int viewCount;
 
     @OneToOne(mappedBy = "question", cascade = {CascadeType.REMOVE, CascadeType.PERSIST})
+    @JsonManagedReference
     private Answer answer;
 
     @JoinColumn(name = "USER_ID")
     @ManyToOne(fetch = FetchType.EAGER)
+    @JsonBackReference
     private User user;
 
     @Enumerated(EnumType.STRING)

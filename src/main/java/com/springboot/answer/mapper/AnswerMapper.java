@@ -9,12 +9,7 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface AnswerMapper {
-    @Mapping(source = "question.questionId", target = "questionId")
-    @Mapping(source = "user.userId", target = "userId")
-    @Mapping(source = "user.email", target = "userName")
     AnswerResponseDto answerToAnswerResponseDto(Answer answer);
-//    Unmapped target properties: "question, answerId, user".
     Answer answerPostDtoToAnswer(AnswerPostDto answerPostDto);
-//    Unmapped target properties: "question, user".
     Answer answerPatchDtoToAnswer(AnswerPatchDto answerPatchDto);
 }
