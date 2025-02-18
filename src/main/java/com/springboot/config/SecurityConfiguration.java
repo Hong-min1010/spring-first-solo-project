@@ -96,7 +96,7 @@ public class SecurityConfiguration {
                         .antMatchers(HttpMethod.PATCH, "/*/questions/**").hasRole("USER")
                         // Question 전체 조회 (USER, ADMIN 가능)
                         .antMatchers(HttpMethod.GET, "/*/questions").hasAnyRole("USER", "ADMIN")
-                        // 특정 주문 조회 (USER, ADMIN 둘 다 가능)
+                        // 특정 Question 조회 (USER, ADMIN 둘 다 가능)
                         .antMatchers(HttpMethod.GET, "/*/questions/**").hasAnyRole("USER", "ADMIN")
                         // Question 삭제 (USER만 가능)
                         .antMatchers(HttpMethod.DELETE, "/*/questions/**").hasRole("USER")
@@ -104,15 +104,10 @@ public class SecurityConfiguration {
                         // Answer 권한 설정
 
                         // Answer 생성 (ADMIN만 가능)
-                        .antMatchers(HttpMethod.POST, "/*/answers").hasRole("ADMIN")
+                        .antMatchers(HttpMethod.POST, "/*/questions/*/answers").hasRole("ADMIN")
                         // Answer 수정 (ADMIN만 가능)
-                        .antMatchers(HttpMethod.PATCH, "/*/answers/**").hasRole("ADMIN")
-                        // Answer 전체 조회 (USER, ADMIN 가능)
-                        .antMatchers(HttpMethod.GET, "/*/answers").hasAnyRole("USER", "ADMIN")
-                        // 특정 Answer 조회 (USER, ADMIN 가능)
-                        .antMatchers(HttpMethod.GET, "/*/answers/**").hasAnyRole("USER", "ADMIN")
-                        // 특정 Answer 삭제 (ADMIN만 가능)
-                        .antMatchers(HttpMethod.DELETE, "/*/answers/**").hasRole("ADMIN")
+                        .antMatchers(HttpMethod.PATCH, "/*/questions/*/answers/**").hasRole("ADMIN")
+                        .antMatchers(HttpMethod.DELETE, "/*/questions/*/answers/**").hasRole("ADMIN")
 
                         // Like
 

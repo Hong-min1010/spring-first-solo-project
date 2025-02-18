@@ -1,5 +1,6 @@
 package com.springboot.utils;
 
+import com.springboot.auth.utils.CustomUserDetails;
 import com.springboot.exception.BusinessLogicException;
 import com.springboot.exception.ExceptionCode;
 import com.springboot.user.entity.User;
@@ -16,7 +17,9 @@ import java.util.stream.Collectors;
 public class CheckUserRoles {
     // 로그인 한 사용자와 수정하고싶은 user의 Id 를 비교하는 메서드
 
-    public void matchUserId(Long userId, Long currentUserId) {
+    public void matchUserId(Long userId, CustomUserDetails customUserDetails) {
+
+        Long currentUserId = customUserDetails.getUserId();
 
         if (!userId.equals(currentUserId)) {
             throw new BusinessLogicException(ExceptionCode.USER_FORBIDDEN);
