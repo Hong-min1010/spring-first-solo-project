@@ -2,6 +2,7 @@ package com.springboot.like.service;
 
 import com.springboot.exception.BusinessLogicException;
 import com.springboot.exception.ExceptionCode;
+import com.springboot.like.dto.LikeResponseDto;
 import com.springboot.like.entity.Like;
 import com.springboot.like.repository.LikeRepository;
 import com.springboot.question.entity.Question;
@@ -36,6 +37,7 @@ public class LikeService {
 
         like.setUser(user);
         like.setQuestion(question);
+
         likeRepository.save(like);
 
         question.addLikeCount();
