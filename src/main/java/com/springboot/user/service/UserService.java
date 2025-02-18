@@ -120,7 +120,6 @@ public class UserService {
         if (!foundUserId.equals(currentUserId)) {
             throw new BusinessLogicException(ExceptionCode.USER_FORBIDDEN);
         }
-
     }
 
     // 현재 로그인 한 User의 Email 확인

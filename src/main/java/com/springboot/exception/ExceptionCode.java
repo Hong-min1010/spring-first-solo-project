@@ -12,7 +12,8 @@ public enum ExceptionCode {
     LIKE_NOT_FOUND(404, "Like not found"),
     USER_NOT_CREATED(400, "User not created"),
     USER_FORBIDDEN(403, "Forbidden User"),
-    ANSWER_NOT_FOUND(404, "Answer not found");
+    ANSWER_NOT_FOUND(404, "Answer not found"),
+    FORBIDDEN_ACCESS(403, "비밀글입니다");
 
     @Getter
     private int status;
