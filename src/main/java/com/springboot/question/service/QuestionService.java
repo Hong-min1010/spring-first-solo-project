@@ -66,7 +66,7 @@ public class QuestionService {
 
         if (question.getQuestionVisibility() == Question.QuestionVisibility.QUESTION_SECRET) {
             if (!question.getUser().getUserId().equals(currentId) && !checkUserRoles.isAdmin()) {
-                question.setQuestionContext("비밀글입니다.");
+                throw new BusinessLogicException(ExceptionCode.FORBIDDEN_ACCESS);
             }
         }
 
@@ -74,7 +74,10 @@ public class QuestionService {
 
         verifyQuestionDeleteStatus(question);
 
-        question.setViewCount(question.getViewCount() + 1);
+        if (question.getQuestionVisibility() != Question.QuestionVisibility.QUESTION_SECRET) {
+            question.setViewCount(question.getViewCount() + 1);
+        }
+
 
         questionRepository.save(question);
 
