@@ -5,6 +5,7 @@ import com.springboot.answer.repository.AnswerRepository;
 import com.springboot.auth.utils.CustomUserDetails;
 import com.springboot.exception.BusinessLogicException;
 import com.springboot.exception.ExceptionCode;
+import com.springboot.img.FileService;
 import com.springboot.like.dto.LikeResponseDto;
 import com.springboot.like.entity.Like;
 import com.springboot.like.repository.LikeRepository;
@@ -21,6 +22,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -33,20 +35,25 @@ public class QuestionService {
     private final CheckUserRoles checkUserRoles;
     private final LikeRepository likeRepository;
     private final UserRepository userRepository;
+    private final FileService fileService;
 
     public QuestionService(QuestionRepository questionRepository,
-                           CheckUserRoles checkUserRoles, LikeRepository likeRepository, UserRepository userRepository) {
+                           CheckUserRoles checkUserRoles, LikeRepository likeRepository, UserRepository userRepository, FileService fileService) {
 
         this.questionRepository = questionRepository;
         this.checkUserRoles = checkUserRoles;
         this.likeRepository = likeRepository;
         this.userRepository = userRepository;
+        this.fileService = fileService;
     }
 
     public Question createQuestion(Question question,
-                                   CustomUserDetails customUserDetails) {
+                                   CustomUserDetails customUserDetails,
+                                   List<MultipartFile> images) {
 
         Long currentUserId = customUserDetails.getUserId();
+
+        List<String> imageUrls = fileService.uploadImages(images);
 
 //        System.out.println("Current UserId: " +currentUserId);
 
@@ -56,7 +63,10 @@ public class QuestionService {
 
 //        System.out.println("Requested UserId: " + question.getUser().getUserId());
         checkUserRoles.matchUserId(question.getUser().getUserId(), customUserDetails);
-//        System.out.println("Comparing UserIds -> Question Owner: " + question.getUser().getUserId() + ", Current User: " + currentUserId);
+//        System.out.println("Comparing UserIds -> Question Owner: " + question.getUser().getUserId() + ", Current User: " + currentUserId);\
+
+        question.setImageUrls(imageUrls);
+
         return questionRepository.save(question);
     }
 

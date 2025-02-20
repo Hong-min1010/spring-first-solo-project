@@ -49,6 +49,9 @@ public class Question extends BaseEntity {
     @Column(nullable = false)
     private int likeCount = 0;
 
+    @ElementCollection
+    private List<String> imageUrls;
+
     public enum QuestionStatus {
         // 질문 등록
         QUESTION_REGISTERED("질문 등록 상태"),

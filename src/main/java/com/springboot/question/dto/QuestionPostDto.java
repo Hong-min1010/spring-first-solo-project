@@ -8,6 +8,7 @@ import com.sun.istack.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -34,4 +35,6 @@ public class QuestionPostDto {
 
     @Enumerated(EnumType.STRING)
     private Question.QuestionVisibility questionVisibility;
+
+    private List<MultipartFile> images;
 }

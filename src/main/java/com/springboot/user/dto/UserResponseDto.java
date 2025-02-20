@@ -21,5 +21,4 @@ public class UserResponseDto {
     private String name;
     private User.UserStatus userStatus;
     private List<String> roles;
-
 }

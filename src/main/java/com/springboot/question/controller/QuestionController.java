@@ -28,12 +28,15 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/v1/questions")
@@ -58,8 +61,9 @@ public class QuestionController {
     }
 
     @PostMapping
-    public ResponseEntity postQuestion(@Valid @RequestBody QuestionPostDto requestBody,
-                                       @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+    public ResponseEntity postQuestion(@Valid @RequestPart("question") QuestionPostDto requestBody,
+                                       @AuthenticationPrincipal CustomUserDetails customUserDetails,
+                                       @RequestPart(value = "images", required = false)List<MultipartFile> images) {
 
        User user = userService.findVerifiedUser(requestBody.getUserId());
 
@@ -67,9 +71,17 @@ public class QuestionController {
 
         question.setUser(user);
 
-        Question createdQuestion = questionService.createQuestion(question, customUserDetails);
+        Question createdQuestion = questionService.createQuestion(question, customUserDetails, images);
 
         URI location = UriCreator.createUri("/v1/questions", createdQuestion.getQuestionId());
+
+        if (createdQuestion.getImageUrls() != null && !createdQuestion.getImageUrls().isEmpty()) {
+            Map<String, Object> responseWithImages = new HashMap<>();
+            responseWithImages.put("question", questionMapper.questionToQuestionResponseDto(createdQuestion));
+            responseWithImages.put("imageUrls", createdQuestion.getImageUrls());
+
+            return ResponseEntity.created(location).body(responseWithImages);
+        }
 
         return ResponseEntity.created(location).build();
     }
