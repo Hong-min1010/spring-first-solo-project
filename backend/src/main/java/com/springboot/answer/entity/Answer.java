@@ -15,7 +15,6 @@ import javax.persistence.*;
 @Setter
 @NoArgsConstructor
 public class Answer extends BaseEntity {
-
     @Id
     // ID는 DB로 권한 넘기기 자동 생성
     @GeneratedValue(strategy = GenerationType.IDENTITY)

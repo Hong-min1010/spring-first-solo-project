@@ -101,7 +101,6 @@ public class AnswerService {
         if (answer == null) {
             throw new BusinessLogicException(ExceptionCode.ANSWER_NOT_FOUND);
         }
-
         // patch요청에서 answerContext가 입력 된 경우 업데이트
         // 아니라면 기존 Answer 가져오기
         if (patchAnswer.getAnswerContext() != null) {
