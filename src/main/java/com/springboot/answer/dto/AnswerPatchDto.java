@@ -18,4 +18,5 @@ public class AnswerPatchDto {
 
     @NotBlank
     private String answerContext;
+
 }

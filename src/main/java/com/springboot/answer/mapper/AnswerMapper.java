@@ -9,7 +9,11 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface AnswerMapper {
+
     AnswerResponseDto answerToAnswerResponseDto(Answer answer);
+
     Answer answerPostDtoToAnswer(AnswerPostDto answerPostDto);
+
     Answer answerPatchDtoToAnswer(AnswerPatchDto answerPatchDto);
+
 }
