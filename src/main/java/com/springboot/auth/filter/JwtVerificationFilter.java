@@ -40,17 +40,27 @@ public class JwtVerificationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
-            // 요청에서 JWT를 검증하고, Payload(claims)를 가져옴
-            Map<String, Object> claims = verifyJws(request);
-            // 인증 정보를 SecurityContext에 저장한다
-            setAuthenticationToContext(claims);
-        } catch (SignatureException se) { // JWT 서명이 유효하지 않을 경우
-            request.setAttribute("exception", se);
-        } catch (ExpiredJwtException ee) { // JWT가 만료된경우
-            request.setAttribute("exception", ee);
-        } catch (Exception e) { // 기타 예외
-            request.setAttribute("exception", e);
+            String token = jwtTokenizer.resolveToken(request);  // 클라이언트에서 보낸 토큰을 가져옴
+
+            if (token != null && jwtTokenizer.validateToken(token)) {
+                // 유효한 토큰이면, 인증 객체를 설정하여 인증 절차를 계속 진행
+                Map<String, Object> claims = jwtTokenizer.getClaims(token, jwtTokenizer.encodedBase64SecretKey(jwtTokenizer.getSecretKey())).getBody();
+                setAuthenticationToContext(claims);
+            } else {
+                // 토큰이 유효하지 않으면 401 Unauthorized 응답을 반환
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
+        } catch (SignatureException | ExpiredJwtException e) {
+            // 유효하지 않거나 만료된 JWT인 경우
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        } catch (Exception e) {
+            // 기타 예외 발생 시 Unauthorized 반환
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
         }
+
         filterChain.doFilter(request, response);
     }
 

@@ -14,11 +14,15 @@ import com.springboot.user.mapper.UserMapper;
 import com.springboot.user.service.UserService;
 import com.springboot.utils.CheckUserRoles;
 import com.springboot.utils.UriCreator;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,12 +41,27 @@ public class UserController {
     private final UserService userService;
     private final UserMapper userMapper;
     private final CheckUserRoles checkUserRoles;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     public UserController(UserService userService, UserMapper userMapper,
-                          CheckUserRoles checkUserRoles) {
+                          CheckUserRoles checkUserRoles, RedisTemplate<String, Object> redisTemplate) {
         this.userService = userService;
         this.userMapper = userMapper;
         this.checkUserRoles = checkUserRoles;
+        this.redisTemplate = redisTemplate;
+    }
+
+    // 로그아웃 구현
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@AuthenticationPrincipal CustomUserDetails customUserDetails,
+                                       @RequestHeader("Authorization") String authorization) {
+        // JWT 토큰을 Redis에서 제거하기 위해 사용자 ID 또는 토큰을 가져옴
+        String token = authorization.replace("Bearer ", "");
+
+        // Redis에서 해당 토큰 삭제
+        redisTemplate.delete(token);
+
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping

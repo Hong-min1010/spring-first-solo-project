@@ -1,5 +1,7 @@
 package com.springboot.auth.jwt;
 
+import com.springboot.auth.utils.AuthorityUtils;
+import com.springboot.auth.utils.CustomUserDetails;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
@@ -8,12 +10,17 @@ import io.jsonwebtoken.io.Encoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
+import javax.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -113,4 +120,24 @@ public class JwtTokenizer {
 
         return key;
     }
+
+    public String resolveToken(HttpServletRequest request) {
+        String authorizationHeader = request.getHeader("Authorization");
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            return authorizationHeader.substring(7);  // "Bearer " 이후의 토큰을 반환
+        }
+        return null;  // Authorization 헤더가 없거나 Bearer로 시작하지 않으면 null 반환
+    }
+
+    // 토큰이 유효한지 확인하는 메서드
+    public boolean validateToken(String token) {
+        try {
+            // 토큰에서 클레임을 가져오고 서명을 검증하여 유효성 체크
+            Jws<Claims> claims = getClaims(token, encodedBase64SecretKey(secretKey));
+            return !claims.getBody().getExpiration().before(new Date());  // 만료되지 않은 토큰만 유효하다고 판단
+        } catch (Exception e) {
+            return false;  // 예외 발생 시 토큰이 유효하지 않다고 판단
+        }
+    }
+
 }

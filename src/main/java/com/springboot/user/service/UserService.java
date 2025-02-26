@@ -122,15 +122,4 @@ public class UserService {
         }
     }
 
-    // 현재 로그인 한 User의 Email 확인
-//    public String getCurrentUserEmail() {
-//        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-//
-//        if (principal instanceof UserDetails) {
-//            return ((UserDetails) principal).getUsername();
-//        } else {
-//            return principal.toString();
-//        }
-//    }
-
 }

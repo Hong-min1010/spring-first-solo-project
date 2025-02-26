@@ -28,6 +28,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     public JwtAuthenticationFilter(AuthenticationManager authenticationManager, JwtTokenizer jwtTokenizer) {
         this.authenticationManager = authenticationManager;
         this.jwtTokenizer = jwtTokenizer;
+        setFilterProcessesUrl("/v1/login");
     }
 
     @SneakyThrows // Throws를 쓰지 않아도 자동으로 예외를 thorw하는 에너테이션

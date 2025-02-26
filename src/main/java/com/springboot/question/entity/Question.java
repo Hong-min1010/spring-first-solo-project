@@ -32,7 +32,7 @@ public class Question extends BaseEntity {
     private String questionContext;
 
     @Column(nullable = false)
-    private int viewCount;
+    private int viewCount = 0;
 
     @OneToOne(mappedBy = "question", cascade = {CascadeType.REMOVE, CascadeType.PERSIST})
     @JsonManagedReference

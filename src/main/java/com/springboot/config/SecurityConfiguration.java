@@ -76,7 +76,9 @@ public class SecurityConfiguration {
                         // USER
 
                         // 로그인(토큰 발급) 요청은 모두 허용
-                        .antMatchers(HttpMethod.POST, "/v11/auth/login").permitAll() // 로그인 요청 허용
+                        .antMatchers(HttpMethod.POST, "/v1/login").permitAll() // 로그인 요청 허용
+                        //로그아웃 요청 모두 허용
+                        .antMatchers(HttpMethod.POST, "/v1/logout").permitAll()
                         // 회원가입 요청 모두 허용
                         .antMatchers(HttpMethod.POST, "/*/users").permitAll()
                         // 회원 정보 수정 (USER만 가능)
@@ -150,7 +152,7 @@ public class SecurityConfiguration {
 
             JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(authenticationManager, jwtTokenizer);
             // 로그인 경로 설정
-            jwtAuthenticationFilter.setFilterProcessesUrl("/v11/auth/login");
+            jwtAuthenticationFilter.setFilterProcessesUrl("/v1/login");
             // 인증 성공 時 핸들러
             jwtAuthenticationFilter.setAuthenticationSuccessHandler(new UserAuthenticationSuccessHandler());
             // 인증 실패 時 핸들러
