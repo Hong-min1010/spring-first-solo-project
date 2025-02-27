@@ -141,16 +141,10 @@ public class UserController {
                                      @AuthenticationPrincipal CustomUserDetails customUserDetails) {
 
         Long currentUserId = customUserDetails.getUserId();
-//        log.info("현재 로그인한 사용자 ID: {}", currentUserId);
-//        log.info("삭제 요청된 사용자 ID: {}", userId);
 
         if (!checkUserRoles.isAdmin() && !currentUserId.equals(userId)) {
-//            log.error("삭제 권한 없음! Forbidden 발생");
             throw new BusinessLogicException(ExceptionCode.USER_FORBIDDEN);
         }
-
-
-        userService.matchUserId(userId, customUserDetails);
 
         userService.deleteUser(userId);
 
