@@ -49,8 +49,16 @@ public class Question extends BaseEntity {
     @Column(nullable = false)
     private int likeCount = 0;
 
+    @Column(length = 255)
+    private String fileName; // 원본 파일명
+
+    @Column(length = 500)
+    private String fileUrl; // S3에서 접근 가능한 파일 URL
+
     @ElementCollection
-    private List<String> imageUrls;
+    @CollectionTable(name = "question_image_urls", joinColumns = @JoinColumn(name = "question_id"))
+    @Column(name = "image_url")
+    private List<String> imageUrls = new ArrayList<>();  // 이미지 URL 리스트
 
     public enum QuestionStatus {
         // 질문 등록
@@ -100,6 +108,19 @@ public class Question extends BaseEntity {
     public void decreaseLikeCount() {
         // decreaseLikeCount가 호출 될때마다 LikeCount 1씩 감소 (최소값 = 0)
         this.likeCount = Math.max(0, this.likeCount - 1);
+    }
+
+    // 파일 URL 설정 메서드 추가
+    public void setFileUrl(String fileUrl) {
+        if (fileUrl != null && fileUrl.startsWith("https://")) { // URL 형식 검증
+            this.fileUrl = fileUrl;
+        } else {
+            throw new IllegalArgumentException("유효한 URL이 아닙니다.");
+        }
+    }
+
+    public void setImageUrls(List<String> imageUrls) {
+        this.imageUrls = imageUrls;
     }
 
     // Entity가 저장되기 전 강제로 값 설정하는 애너테이션
