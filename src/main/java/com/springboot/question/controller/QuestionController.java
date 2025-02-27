@@ -23,6 +23,7 @@ import com.springboot.utils.CheckUserRoles;
 import com.springboot.utils.UriCreator;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -60,21 +61,24 @@ public class QuestionController {
         this.answerMapper = answerMapper;
     }
 
-    @PostMapping
+    @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity postQuestion(@Valid @RequestPart("question") QuestionPostDto requestBody,
                                        @AuthenticationPrincipal CustomUserDetails customUserDetails,
-                                       @RequestPart(value = "images", required = false)List<MultipartFile> images) {
+                                       @RequestPart(value = "images", required = false) List<MultipartFile> images) {
+        // 요청에 포함된 userId를 통해 사용자 조회
+        User user = userService.findVerifiedUser(requestBody.getUserId());
 
-       User user = userService.findVerifiedUser(requestBody.getUserId());
-
+        // DTO를 엔티티로 변환하고, 사용자 정보 설정
         Question question = questionMapper.questionPostDtoToQuestion(requestBody);
-
         question.setUser(user);
 
+        // 질문 생성 (이미지 포함 여부 처리)
         Question createdQuestion = questionService.createQuestion(question, customUserDetails, images);
 
+        // 새로 생성된 질문의 URI 생성
         URI location = UriCreator.createUri("/v1/questions", createdQuestion.getQuestionId());
 
+        // 이미지가 포함되어 있으면, 이미지 URL도 응답에 포함
         if (createdQuestion.getImageUrls() != null && !createdQuestion.getImageUrls().isEmpty()) {
             Map<String, Object> responseWithImages = new HashMap<>();
             responseWithImages.put("question", questionMapper.questionToQuestionResponseDto(createdQuestion));
@@ -83,6 +87,7 @@ public class QuestionController {
             return ResponseEntity.created(location).body(responseWithImages);
         }
 
+        // 이미지가 없으면, 질문만 응답
         return ResponseEntity.created(location).build();
     }
 
@@ -114,12 +119,6 @@ public class QuestionController {
                                       @AuthenticationPrincipal CustomUserDetails customUserDetails) {
 
         Question question = questionService.findQuestion(questionId, customUserDetails.getUserId());
-
-//        Long currentUseId = customUserDetails.getUserId();
-//        System.out.println("Authenticated User ID: " + currentUseId);
-//        if (!question.getUser().getUserId().equals(currentUseId)) {
-//            throw new BusinessLogicException(ExceptionCode.USER_FORBIDDEN);
-//        }
 
         String questionContext = question.getQuestionVisibility() == Question.QuestionVisibility.QUESTION_SECRET
                 ? "비밀글입니다."
