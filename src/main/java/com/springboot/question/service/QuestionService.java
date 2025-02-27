@@ -1,22 +1,14 @@
 package com.springboot.question.service;
 
-import com.springboot.answer.dto.AnswerResponseDto;
-import com.springboot.answer.repository.AnswerRepository;
 import com.springboot.auth.utils.CustomUserDetails;
 import com.springboot.exception.BusinessLogicException;
 import com.springboot.exception.ExceptionCode;
-import com.springboot.img.FileService;
-import com.springboot.like.dto.LikeResponseDto;
-import com.springboot.like.entity.Like;
 import com.springboot.like.repository.LikeRepository;
-import com.springboot.question.dto.QuestionResponseDto;
 import com.springboot.question.entity.Question;
-import com.springboot.question.mapper.QuestionMapper;
 import com.springboot.question.repository.QuestionRepository;
-import com.springboot.user.entity.User;
 import com.springboot.user.repository.UserRepository;
-import com.springboot.user.service.UserService;
 import com.springboot.utils.CheckUserRoles;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -24,50 +16,59 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Transactional
 @Service
+@Slf4j
 public class QuestionService {
     private final QuestionRepository questionRepository;
     private final CheckUserRoles checkUserRoles;
     private final LikeRepository likeRepository;
     private final UserRepository userRepository;
-    private final FileService fileService;
+    private final StorageService storageService;
 
     public QuestionService(QuestionRepository questionRepository,
-                           CheckUserRoles checkUserRoles, LikeRepository likeRepository, UserRepository userRepository, FileService fileService) {
+                           CheckUserRoles checkUserRoles, LikeRepository likeRepository, UserRepository userRepository, StorageService storageService) {
 
         this.questionRepository = questionRepository;
         this.checkUserRoles = checkUserRoles;
         this.likeRepository = likeRepository;
         this.userRepository = userRepository;
-        this.fileService = fileService;
+        this.storageService = storageService;
     }
 
     public Question createQuestion(Question question,
                                    CustomUserDetails customUserDetails,
-                                   List<MultipartFile> images) {
+                                   List<MultipartFile> files) {
 
         Long currentUserId = customUserDetails.getUserId();
 
-        List<String> imageUrls = fileService.uploadImages(images);
-
-//        System.out.println("Current UserId: " +currentUserId);
-
+        // 관리자 검증 (여기서 수정된 부분)
         if (checkUserRoles.isAdmin()) {
             throw new BusinessLogicException(ExceptionCode.USER_FORBIDDEN);
         }
 
-//        System.out.println("Requested UserId: " + question.getUser().getUserId());
+        // 요청한 사용자가 맞는지 확인
         checkUserRoles.matchUserId(question.getUser().getUserId(), customUserDetails);
-//        System.out.println("Comparing UserIds -> Question Owner: " + question.getUser().getUserId() + ", Current User: " + currentUserId);\
 
-        question.setImageUrls(imageUrls);
+        List<String> imageUrls = new ArrayList<>();  // 이미지 URL을 저장할 리스트
 
-        return questionRepository.save(question);
+        // 파일이 여러 개일 경우 처리
+        if (files != null && !files.isEmpty()) {
+            for (MultipartFile file : files) {
+                if (!file.isEmpty()) {
+                    log.info("Uploading file to S3...");
+                    storageService.store(file);  // S3에 파일 업로드
+                    // 내 Bucket 주소로 수정 要
+                    String fileUrl = "s3://your-bucket-name/" + file.getOriginalFilename();
+                    imageUrls.add(fileUrl);  // 파일 URL을 리스트에 추가
+                }
+            }
+            question.setImageUrls(imageUrls);  // 이미지 URL들을 질문에 설정
+        }
+
+        return questionRepository.save(question);  // 질문 저장
     }
 
     public Question findQuestion(Long questionId, Long currentId) {
@@ -79,8 +80,6 @@ public class QuestionService {
                 throw new BusinessLogicException(ExceptionCode.FORBIDDEN_ACCESS);
             }
         }
-
-//        Long userId = question.getUser().getUserId();
 
         verifyQuestionDeleteStatus(question);
 
@@ -98,8 +97,7 @@ public class QuestionService {
     public Page<Question> findQuestions(int page, int size) {
         // Secret Qeustion 은 조회되면 안됨
 
-        // 전체 조회 時 SECRET Question "비공개글 입니다" 로 변환 -> convertToResponseDto 사용 해야함
-
+        // 전체 조회 時 SECRET Question "비공개글 입니다" 로 변환
         Page<Question> questionPage = questionRepository.findByQuestionStatusNotIn(
                 Arrays.asList(
                         Question.QuestionStatus.QUESTION_DELETED,
@@ -120,17 +118,12 @@ public class QuestionService {
     }
 
     public void deleteQuestion(long questionId, CustomUserDetails customUserDetails) {
-        // 작성자가 User인지 확인하는 메서드 (사용 안해도 됨)
-//        checkUserRoles.isUser();
-//        System.out.println("Received questionId: " + questionId);
 
         // login 한 사용자
         Long currentUserId = customUserDetails.getUserId();
-//        System.out.println("현재 로그인한 사용자 ID: " + currentUserId);
 
         // 질문을 등록 한 사용자만 삭제 가능
         Question question = findVerifiedQuestion(questionId);
-//        System.out.println("질문 작성자 ID: " + question.getUser().getUserId());
 
         if (!question.getUser().getUserId().equals(currentUserId)) {
             throw new BusinessLogicException(ExceptionCode.USER_FORBIDDEN);
@@ -213,44 +206,34 @@ public class QuestionService {
         }
     }
 
-    private QuestionResponseDto convertToResponseDto(Question question) {
-        List<Like> likes = likeRepository.findByQuestion(question);
-
-        AnswerResponseDto  answerResponseDto = null;
-        if (question.getAnswer() != null) {
-            Long answerId = question.getAnswer().getAnswerId();
-            String content = question.getAnswer().getAnswerContext(); // 예시로 content도 가져오는 것
-            Long userId = question.getAnswer().getUser().getUserId(); // 답변을 쓴 user의 ID
-            Long questionId = question.getQuestionId(); // 해당 질문의 ID
-            String userName = question.getAnswer().getUser().getName();  // answerId를 생성자에 전달
-        }
-
-        List<LikeResponseDto> likeDtos = likes.stream()
-                .map(like -> new LikeResponseDto(
-                        like.getLikeId(),
-                        like.getQuestion().getQuestionId(),
-                        like.getUser().getUserId()
-                )).collect(Collectors.toList());
-        return new QuestionResponseDto(question.getQuestionId(),
-                question.getTitle(),
-                question.getQuestionContext(),
-                question.getViewCount(),
-                question.getLikeCount(),
-                question.getQuestionStatus(),
-                question.getQuestionVisibility(),
-                question.getUser() != null ? question.getUser().getName() : null,
-                answerResponseDto,
-                likeDtos);
-    }
-
-    public boolean isAuthorOrAdmin(Long questionId, String username) {
-        Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new BusinessLogicException(ExceptionCode.QUESTION_NOT_FOUND));
-
-        User user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new BusinessLogicException(ExceptionCode.USER_NOT_FOUND));
-
-        return user.getRoles().contains("ADMIN") || question.getUser().getUserId().equals(user.getUserId());
-    }
+//    private QuestionResponseDto convertToResponseDto(Question question) {
+//        List<Like> likes = likeRepository.findByQuestion(question);
+//
+//        AnswerResponseDto  answerResponseDto = null;
+//        if (question.getAnswer() != null) {
+//            Long answerId = question.getAnswer().getAnswerId();
+//            String content = question.getAnswer().getAnswerContext(); // 예시로 content도 가져오는 것
+//            Long userId = question.getAnswer().getUser().getUserId(); // 답변을 쓴 user의 ID
+//            Long questionId = question.getQuestionId(); // 해당 질문의 ID
+//            String userName = question.getAnswer().getUser().getName();  // answerId를 생성자에 전달
+//        }
+//
+//        List<LikeResponseDto> likeDtos = likes.stream()
+//                .map(like -> new LikeResponseDto(
+//                        like.getLikeId(),
+//                        like.getQuestion().getQuestionId(),
+//                        like.getUser().getUserId()
+//                )).collect(Collectors.toList());
+//        return new QuestionResponseDto(question.getQuestionId(),
+//                question.getTitle(),
+//                question.getQuestionContext(),
+//                question.getViewCount(),
+//                question.getLikeCount(),
+//                question.getQuestionStatus(),
+//                question.getQuestionVisibility(),
+//                question.getUser() != null ? question.getUser().getName() : null,
+//                answerResponseDto,
+//                likeDtos);
+//    }
 
 }
