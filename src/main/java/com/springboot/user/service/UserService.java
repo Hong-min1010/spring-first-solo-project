@@ -55,14 +55,6 @@ public class UserService {
 
          User existingUser = findVerifiedUser(userId);
 
-
-//        String currentUserEmail = getCurrentUserEmail();
-
-        // 현재 로그인 한 사용자의 Email과 수정하려는 사용자의 Email이 같은지 확인
-//        if (!findUser.getEmail().equals(currentUserEmail)) {
-//            throw new BusinessLogicException(ExceptionCode.USER_FORBIDDEN);
-//        }
-
         Optional.ofNullable(user.getEmail())
                 .ifPresent(email -> existingUser.setEmail(email));
         Optional.ofNullable(user.getName())
@@ -92,7 +84,7 @@ public class UserService {
         userRepository.save(user);
     }
 
-    // 이미 email로 가입이 되어있는 회원인지 확인(create)
+    // 이미 가입 되어있는 Email인지 검증하는 메서드
     public void verifyExistsEmail(String email) {
         Optional<User> user = userRepository.findByEmail(email);
         if (user.isPresent())
@@ -109,6 +101,7 @@ public class UserService {
         return findUser;
     }
 
+    // 현재 찾는 사용자와 로그인 한 사용자가 같은 사용자인지 확인
     public void matchUserId(Long userId,CustomUserDetails customUserDetails) {
 
         User findUser = findVerifiedUser(userId);
