@@ -60,8 +60,7 @@ public class QuestionService {
                 if (!file.isEmpty()) {
                     log.info("Uploading file to S3...");
                     storageService.store(file);  // S3에 파일 업로드
-                    // 내 Bucket 주소로 수정 要
-                    String fileUrl = "s3://your-bucket-name/" + file.getOriginalFilename();
+                    String fileUrl = "http://bucket-test-imges.s3.amazonaws.com/" + file.getOriginalFilename();
                     imageUrls.add(fileUrl);  // 파일 URL을 리스트에 추가
                 }
             }

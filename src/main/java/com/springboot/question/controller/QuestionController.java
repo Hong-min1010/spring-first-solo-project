@@ -70,6 +70,7 @@ public class QuestionController {
 
         // DTO를 엔티티로 변환하고, 사용자 정보 설정
         Question question = questionMapper.questionPostDtoToQuestion(requestBody);
+
         question.setUser(user);
 
         // 질문 생성 (이미지 포함 여부 처리)
