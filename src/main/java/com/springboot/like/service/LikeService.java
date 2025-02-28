@@ -2,7 +2,6 @@ package com.springboot.like.service;
 
 import com.springboot.exception.BusinessLogicException;
 import com.springboot.exception.ExceptionCode;
-import com.springboot.like.dto.LikeResponseDto;
 import com.springboot.like.entity.Like;
 import com.springboot.like.repository.LikeRepository;
 import com.springboot.question.entity.Question;
@@ -41,7 +40,7 @@ public class LikeService {
         likeRepository.save(like);
 
         question.addLikeCount();
-        // likeCount는 Question에 있기 때문에 좋아요 갯수 정보는 questionRepository에 저장
+
         questionRepository.save(question);
 
         return like;
